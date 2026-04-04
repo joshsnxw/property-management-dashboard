@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const CreateUnitSchema = z.object({
-  number:          z.string().min(1),
+  number:          z.string().default(""),
   type:            z.enum(["APARTMENT", "OFFICE", "GARDEN", "PARKING"]),
   floor:           z.string().optional(),
   entrance:        z.string().optional(),
