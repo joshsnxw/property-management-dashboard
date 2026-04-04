@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Building } from "./types";
 
 interface Props {
@@ -35,9 +36,10 @@ function toDraft(b: Building): BuildingDraft {
 
 export function TabBuildings({ propertyId, buildings, onUpdate }: Props) {
   const { toast } = useToast();
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [drafts, setDrafts]     = useState<Record<string, BuildingDraft>>({});
-  const [saving, setSaving]     = useState<string | null>(null);
+  const [expanded, setExpanded]         = useState<string | null>(null);
+  const [drafts, setDrafts]             = useState<Record<string, BuildingDraft>>({});
+  const [saving, setSaving]             = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<Building | null>(null);
 
   function startEdit(b: Building) {
     setDrafts((d) => ({ ...d, [b.id]: toDraft(b) }));
@@ -100,6 +102,8 @@ export function TabBuildings({ propertyId, buildings, onUpdate }: Props) {
       toast("Building removed", "success");
     } catch {
       toast("Network error — could not remove building", "error");
+    } finally {
+      setConfirmRemove(null);
     }
   }
 
@@ -144,7 +148,7 @@ export function TabBuildings({ propertyId, buildings, onUpdate }: Props) {
                 )}
                 <button
                   type="button"
-                  onClick={() => removeBuilding(b.id)}
+                  onClick={() => setConfirmRemove(b)}
                   className="text-xs text-tertiary hover:text-red transition-colors"
                 >
                   Remove
@@ -211,6 +215,15 @@ export function TabBuildings({ propertyId, buildings, onUpdate }: Props) {
       <Button variant="ghost" size="sm" onClick={addBuilding} className="self-start">
         + Add building
       </Button>
+
+      <ConfirmDialog
+        open={confirmRemove !== null}
+        title="Remove building?"
+        message={`Remove "${confirmRemove?.label}"? All units inside it will also be deleted.`}
+        confirmLabel="Remove"
+        onConfirm={() => confirmRemove && removeBuilding(confirmRemove.id)}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Building, Unit } from "./types";
 
 interface Props {
@@ -16,7 +17,8 @@ const UNIT_TYPES: UnitType[] = ["APARTMENT", "OFFICE", "GARDEN", "PARKING"];
 
 export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
   const { toast } = useToast();
-  const [typeFilter, setTypeFilter] = useState<UnitType | "ALL">("ALL");
+  const [typeFilter, setTypeFilter]   = useState<UnitType | "ALL">("ALL");
+  const [confirmDelete, setConfirmDelete] = useState<Unit | null>(null);
 
   const allUnits = buildings.flatMap((b) =>
     b.units.map((u) => ({ ...u, buildingLabel: b.label }))
@@ -195,7 +197,7 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
                   <td className="px-2 py-0.5">
                     <button
                       type="button"
-                      onClick={() => deleteUnit(u.id)}
+                      onClick={() => setConfirmDelete(u)}
                       className="text-tertiary hover:text-red transition-colors text-xs"
                       aria-label="Remove unit"
                     >
@@ -212,6 +214,15 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
       <Button variant="ghost" size="sm" onClick={addUnit} className="self-start">
         + Add unit
       </Button>
+
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        title="Delete unit?"
+        message={`Delete unit "${confirmDelete?.number || "unnamed"}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => { if (confirmDelete) { deleteUnit(confirmDelete.id); setConfirmDelete(null); } }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

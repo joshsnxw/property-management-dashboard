@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PropertyDetail, Staff } from "./types";
 
 interface Props {
@@ -34,11 +36,14 @@ function toDraft(p: PropertyDetail): Draft {
 }
 
 export function TabGeneral({ property, onUpdate }: Props) {
-  const { toast } = useToast();
-  const [editing, setEditing]   = useState(false);
-  const [draft, setDraft]       = useState<Draft>(toDraft(property));
-  const [saving, setSaving]     = useState(false);
-  const [staff, setStaff]       = useState<Staff[]>([]);
+  const { toast }  = useToast();
+  const router     = useRouter();
+  const [editing, setEditing]         = useState(false);
+  const [draft, setDraft]             = useState<Draft>(toDraft(property));
+  const [saving, setSaving]           = useState(false);
+  const [deleting, setDeleting]       = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [staff, setStaff]             = useState<Staff[]>([]);
 
   useEffect(() => {
     fetch("/api/staff").then((r) => r.json()).then(setStaff).catch(() => {});
@@ -78,6 +83,20 @@ export function TabGeneral({ property, onUpdate }: Props) {
       toast("Changes saved", "success");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function deleteProperty() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/properties/${property.id}`, { method: "DELETE" });
+      if (!res.ok) { toast("Failed to delete property", "error"); return; }
+      router.push("/properties");
+    } catch {
+      toast("Network error — could not delete property", "error");
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
     }
   }
 
@@ -203,6 +222,30 @@ export function TabGeneral({ property, onUpdate }: Props) {
           <Button variant="ghost" size="sm" onClick={cancelEdit}>Cancel</Button>
         </div>
       )}
+
+      {/* Danger zone */}
+      {!editing && (
+        <div className="pt-4 border-t border-border mt-2">
+          <p className="text-xs text-tertiary mb-2">Danger zone</p>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setConfirmDelete(true)}
+            disabled={deleting}
+          >
+            Delete property
+          </Button>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete property?"
+        message={`This will permanently delete "${property.name}" along with all its buildings, units, and documents. This cannot be undone.`}
+        confirmLabel={deleting ? "Deleting…" : "Delete property"}
+        onConfirm={deleteProperty}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }
