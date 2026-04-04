@@ -56,12 +56,7 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-primary">Properties</h1>
-        <Link href="/properties/new">
-          <Button size="sm">+ New property</Button>
-        </Link>
-      </div>
+      <h1 className="text-lg font-semibold text-primary">Properties</h1>
 
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -71,8 +66,8 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
         <KpiCard label="Total units" value={kpis.totalUnits} />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Filters + New property */}
+      <div className="flex flex-wrap items-center gap-3">
         <input
           type="text"
           placeholder="Search properties…"
@@ -99,6 +94,9 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
             <option key={m} value={m}>{m}</option>
           ))}
         </select>
+        <Link href="/properties/new" className="ml-auto">
+          <Button size="sm">+ New property</Button>
+        </Link>
       </div>
 
       {/* Table */}

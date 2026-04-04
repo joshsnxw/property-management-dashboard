@@ -60,33 +60,45 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
       if (value !== null && isNaN(value as number)) return;
     }
 
-    const res = await fetch(`/api/units/${unit.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
-    });
-    if (!res.ok) { toast("Failed to save unit", "error"); return; }
-    replaceUnit(await res.json());
+    try {
+      const res = await fetch(`/api/units/${unit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) { toast("Failed to save unit", "error"); return; }
+      replaceUnit(await res.json());
+    } catch {
+      toast("Network error — could not save unit", "error");
+    }
   }
 
   async function addUnit() {
     const firstBuilding = buildings[0];
     if (!firstBuilding) return;
-    const res = await fetch(`/api/properties/${propertyId}/units`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        number: "", type: "APARTMENT", buildingId: firstBuilding.id,
-      }),
-    });
-    if (!res.ok) { toast("Failed to add unit", "error"); return; }
-    addUnitToBuilding(firstBuilding.id, await res.json());
+    try {
+      const res = await fetch(`/api/properties/${propertyId}/units`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          number: "", type: "APARTMENT", buildingId: firstBuilding.id,
+        }),
+      });
+      if (!res.ok) { toast("Failed to add unit", "error"); return; }
+      addUnitToBuilding(firstBuilding.id, await res.json());
+    } catch {
+      toast("Network error — could not add unit", "error");
+    }
   }
 
   async function deleteUnit(id: string) {
-    const res = await fetch(`/api/units/${id}`, { method: "DELETE" });
-    if (!res.ok) { toast("Failed to delete unit", "error"); return; }
-    removeUnitFromState(id);
+    try {
+      const res = await fetch(`/api/units/${id}`, { method: "DELETE" });
+      if (!res.ok) { toast("Failed to delete unit", "error"); return; }
+      removeUnitFromState(id);
+    } catch {
+      toast("Network error — could not delete unit", "error");
+    }
   }
 
   const thClass = "text-left px-2 py-2 text-xs font-medium text-tertiary whitespace-nowrap";
@@ -130,7 +142,17 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
 
       {/* Spreadsheet */}
       <div className="border border-border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
+          <colgroup>
+            <col className="w-40" />  {/* Building */}
+            <col className="w-24" />  {/* Unit # */}
+            <col className="w-32" />  {/* Type */}
+            <col className="w-16" />  {/* Floor */}
+            <col className="w-20" />  {/* Entrance */}
+            <col className="w-20" />  {/* Size m² */}
+            <col className="w-16" />  {/* Rooms */}
+            <col className="w-8"  />  {/* Delete */}
+          </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">
               <th className={thClass}>Building</th>

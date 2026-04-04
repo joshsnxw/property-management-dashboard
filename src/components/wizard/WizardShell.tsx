@@ -67,7 +67,17 @@ export function WizardShell() {
     if (step < 2) { setErrors({}); setStep(step + 1); }
   }
 
+  function validateStep3(): boolean {
+    const e: Record<string, string> = {};
+    units.forEach((u, i) => {
+      if (!u.number.trim()) e[`u${i}_number`] = "Required";
+    });
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
   async function handleSave() {
+    if (!validateStep3()) return;
     setSaving(true);
     try {
       const firstBuilding = buildings[0];
@@ -111,7 +121,7 @@ export function WizardShell() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl">
+    <div className={`flex flex-col gap-6 ${step === 2 ? "w-full" : "max-w-2xl"}`}>
       {/* Stepper */}
       <div className="flex items-center gap-0">
         {STEPS.map((label, i) => (
@@ -140,7 +150,7 @@ export function WizardShell() {
       </div>
 
       {/* Step content */}
-      <div className="bg-bg-0 border border-border rounded-lg p-6">
+      <div className={`bg-bg-0 border border-border rounded-lg ${step === 2 ? "p-4" : "p-6"}`}>
         {step === 0 && (
           <Step1GeneralInfo data={step1} onChange={setStep1} errors={errors} />
         )}
@@ -156,6 +166,7 @@ export function WizardShell() {
             buildings={buildings}
             units={units}
             onChange={setUnits}
+            errors={errors}
           />
         )}
       </div>

@@ -20,13 +20,14 @@ interface Props {
   buildings: BuildingData[];
   units:     UnitRow[];
   onChange:  (units: UnitRow[]) => void;
+  errors?:   Record<string, string>;
 }
 
 function emptyUnit(buildingIndex = 0): UnitRow {
   return { number: "", type: "APARTMENT", floor: "", entrance: "", sizeSqm: "", rooms: "", buildingIndex };
 }
 
-export function Step3Units({ buildings, units, onChange }: Props) {
+export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
   const [typeFilter, setTypeFilter] = [null as string | null, (_: string | null) => {}];
   // eslint-disable-next-line prefer-const
   let activeType: string | null = null;
@@ -110,7 +111,17 @@ export function Step3Units({ buildings, units, onChange }: Props) {
 
       {/* Spreadsheet */}
       <div ref={tableRef} className="border border-border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
+          <colgroup>
+            <col className="w-40" />  {/* Building */}
+            <col className="w-24" />  {/* Unit # */}
+            <col className="w-32" />  {/* Type */}
+            <col className="w-16" />  {/* Floor */}
+            <col className="w-20" />  {/* Entrance */}
+            <col className="w-20" />  {/* Size m² */}
+            <col className="w-16" />  {/* Rooms */}
+            <col className="w-8"  />  {/* Delete */}
+          </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">
               <th className={thClass}>Building</th>
@@ -151,12 +162,15 @@ export function Step3Units({ buildings, units, onChange }: Props) {
                   <td className="px-1 py-0.5">
                     <input
                       data-row={i} data-col={1}
-                      className={tdInput}
+                      className={`${tdInput} ${errors[`u${i}_number`] ? "ring-1 ring-red rounded" : ""}`}
                       placeholder="1L"
                       value={u.number}
                       onChange={(e) => update(i, { number: e.target.value })}
                       onKeyDown={(e) => handleKeyDown(e, i, 1, 7)}
                     />
+                    {errors[`u${i}_number`] && (
+                      <p className="text-xs text-red mt-0.5 px-2">{errors[`u${i}_number`]}</p>
+                    )}
                   </td>
                   {/* Type */}
                   <td className="px-1 py-0.5">

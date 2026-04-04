@@ -73,27 +73,34 @@ export function TabBuildings({ propertyId, buildings, onUpdate }: Props) {
   }
 
   async function addBuilding() {
-    const res = await fetch(`/api/properties/${propertyId}/buildings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        label: `Haus ${String.fromCharCode(65 + buildings.length)}`,
-        street: "", houseNumber: "", postalCode: "", city: "Berlin",
-      }),
-    });
-    if (!res.ok) { toast("Failed to add building", "error"); return; }
-    const b: Building = await res.json();
-    const updated = [...buildings, b];
-    onUpdate(updated);
-    startEdit(b);
+    try {
+      const res = await fetch(`/api/properties/${propertyId}/buildings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          label: `Haus ${String.fromCharCode(65 + buildings.length)}`,
+          street: "", houseNumber: "", postalCode: "", city: "Berlin",
+        }),
+      });
+      if (!res.ok) { toast("Failed to add building", "error"); return; }
+      const b: Building = await res.json();
+      onUpdate([...buildings, b]);
+      startEdit(b);
+    } catch {
+      toast("Network error — could not add building", "error");
+    }
   }
 
   async function removeBuilding(id: string) {
     if (buildings.length === 1) { toast("A property must have at least one building", "error"); return; }
-    const res = await fetch(`/api/buildings/${id}`, { method: "DELETE" });
-    if (!res.ok) { toast("Failed to remove building", "error"); return; }
-    onUpdate(buildings.filter((b) => b.id !== id));
-    toast("Building removed", "success");
+    try {
+      const res = await fetch(`/api/buildings/${id}`, { method: "DELETE" });
+      if (!res.ok) { toast("Failed to remove building", "error"); return; }
+      onUpdate(buildings.filter((b) => b.id !== id));
+      toast("Building removed", "success");
+    } catch {
+      toast("Network error — could not remove building", "error");
+    }
   }
 
   const inputClass =
