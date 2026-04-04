@@ -150,17 +150,15 @@ export function TabGeneral({ property, onUpdate }: Props) {
           )}
         </div>
 
-        {/* Status */}
+        {/* Accountant */}
         <div className="flex flex-col gap-1">
-          <span className={labelClass}>Status</span>
+          <span className={labelClass}>Accountant</span>
           {editing ? (
-            <select className={inputClass} value={draft.status} onChange={(e) => set({ status: e.target.value as Draft["status"] })}>
-              <option value="ACTIVE">Active</option>
-              <option value="PENDING">Pending</option>
-              <option value="ARCHIVED">Archived</option>
+            <select className={inputClass} value={draft.accountantId} onChange={(e) => set({ accountantId: e.target.value })}>
+              {accountants.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           ) : (
-            <StatusDot status={property.status.toLowerCase() as "active" | "pending" | "archived"} />
+            <span className={valueClass}>{property.accountant?.name ?? "—"}</span>
           )}
         </div>
 
@@ -176,15 +174,17 @@ export function TabGeneral({ property, onUpdate }: Props) {
           )}
         </div>
 
-        {/* Accountant */}
+        {/* Status */}
         <div className="flex flex-col gap-1">
-          <span className={labelClass}>Accountant</span>
+          <span className={labelClass}>Status</span>
           {editing ? (
-            <select className={inputClass} value={draft.accountantId} onChange={(e) => set({ accountantId: e.target.value })}>
-              {accountants.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            <select className={inputClass} value={draft.status} onChange={(e) => set({ status: e.target.value as Draft["status"] })}>
+              <option value="ACTIVE">Active</option>
+              <option value="PENDING">Pending</option>
+              <option value="ARCHIVED">Archived</option>
             </select>
           ) : (
-            <span className={valueClass}>{property.accountant?.name ?? "—"}</span>
+            <StatusDot status={property.status.toLowerCase() as "active" | "pending" | "archived"} />
           )}
         </div>
 
