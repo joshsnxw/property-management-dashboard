@@ -47,8 +47,8 @@ export interface PropertyDetail {
   status:      "ACTIVE" | "PENDING" | "ARCHIVED";
   managerId:   string;
   accountantId:string;
-  manager:     Staff;
-  accountant:  Staff;
+  manager:     Staff | null;
+  accountant:  Staff | null;
   buildings:   Building[];
   documents:   Document[];
   createdAt:   string;

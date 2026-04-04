@@ -14,8 +14,8 @@ interface Property {
   number: string;
   type: "WEG" | "MV";
   status: "ACTIVE" | "PENDING" | "ARCHIVED";
-  manager:   { name: string };
-  accountant:{ name: string };
+  manager:    { name: string } | null;
+  accountant: { name: string } | null;
   _count: { buildings: number };
   unitCount: number;
 }
@@ -32,7 +32,7 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
   const [managerFilter, setManagerFilter] = useState("ALL");
 
   const managers = useMemo(
-    () => Array.from(new Set(properties.map((p) => p.manager.name))),
+    () => Array.from(new Set(properties.map((p) => p.manager?.name).filter(Boolean))) as string[],
     [properties]
   );
 
@@ -44,7 +44,7 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
         p.number.toLowerCase().includes(search.toLowerCase()) ||
         p.address.toLowerCase().includes(search.toLowerCase());
       const matchType    = typeFilter    === "ALL" || p.type         === typeFilter;
-      const matchManager = managerFilter === "ALL" || p.manager.name === managerFilter;
+      const matchManager = managerFilter === "ALL" || p.manager?.name === managerFilter;
       return matchSearch && matchType && matchManager;
     });
   }, [properties, search, typeFilter, managerFilter]);
@@ -76,6 +76,7 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent w-52"
+          suppressHydrationWarning
         />
         <select
           value={typeFilter}
@@ -105,21 +106,21 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
       <div className="border border-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed min-w-[780px]">
           <colgroup>
-            <col />              {/* Property — fluid */}
-            <col className="w-28" />  {/* Number */}
-            <col className="w-16" />  {/* Type */}
-            <col className="w-16" />  {/* Bldgs */}
-            <col className="w-14" />  {/* Units */}
-            <col className="w-32" />  {/* Manager */}
-            <col className="w-32" />  {/* Accountant */}
-            <col className="w-24" />  {/* Status */}
+            <col />
+            <col className="w-28" />
+            <col className="w-16" />
+            <col className="w-24" />
+            <col className="w-14" />
+            <col className="w-32" />
+            <col className="w-32" />
+            <col className="w-24" />
           </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">
               <th className={th}>Property</th>
               <th className={th}>Number</th>
               <th className={th}>Type</th>
-              <th className={th}>Bldgs</th>
+              <th className={th}>Buildings</th>
               <th className={th}>Units</th>
               <th className={th}>Manager</th>
               <th className={th}>Accountant</th>
@@ -153,8 +154,8 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
                   </td>
                   <td className="px-3 py-3 text-secondary text-center">{p._count.buildings}</td>
                   <td className="px-3 py-3 text-secondary text-center">{p.unitCount}</td>
-                  <td className="px-3 py-3 text-secondary truncate">{p.manager.name}</td>
-                  <td className="px-3 py-3 text-secondary truncate">{p.accountant.name}</td>
+                  <td className="px-3 py-3 text-secondary truncate">{p.manager?.name ?? <span className="text-tertiary">—</span>}</td>
+                  <td className="px-3 py-3 text-secondary truncate">{p.accountant?.name ?? <span className="text-tertiary">—</span>}</td>
                   <td className="px-3 py-3">
                     <StatusDot status={p.status.toLowerCase() as "active" | "pending" | "archived"} />
                   </td>

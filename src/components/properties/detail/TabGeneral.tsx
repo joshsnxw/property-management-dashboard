@@ -172,7 +172,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
               {managers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
           ) : (
-            <span className={valueClass}>{property.manager.name}</span>
+            <span className={valueClass}>{property.manager?.name ?? "—"}</span>
           )}
         </div>
 
@@ -184,7 +184,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
               {accountants.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           ) : (
-            <span className={valueClass}>{property.accountant.name}</span>
+            <span className={valueClass}>{property.accountant?.name ?? "—"}</span>
           )}
         </div>
 

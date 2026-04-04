@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/layout/AppShell";
 import { PropertiesTable } from "@/components/properties/PropertiesTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function PropertiesPage() {
   const properties = await prisma.property.findMany({
     include: {
@@ -18,7 +20,18 @@ export default async function PropertiesPage() {
       const unitCount = await prisma.unit.count({
         where: { building: { propertyId: p.id } },
       });
-      return { ...p, unitCount };
+      return {
+        id:          p.id,
+        name:        p.name,
+        address:     p.address,
+        number:      p.number,
+        type:        p.type,
+        status:      p.status,
+        manager:     p.manager   ? { name: p.manager.name }   : null,
+        accountant:  p.accountant? { name: p.accountant.name }: null,
+        _count:      { buildings: p._count.buildings },
+        unitCount,
+      };
     })
   );
 

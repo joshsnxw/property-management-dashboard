@@ -113,14 +113,14 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
       <div ref={tableRef} className="border border-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <colgroup>
-            <col className="w-40" />  {/* Building */}
-            <col className="w-24" />  {/* Unit # */}
-            <col className="w-32" />  {/* Type */}
-            <col className="w-16" />  {/* Floor */}
-            <col className="w-20" />  {/* Entrance */}
-            <col className="w-20" />  {/* Size m² */}
-            <col className="w-16" />  {/* Rooms */}
-            <col className="w-8"  />  {/* Delete */}
+            <col className="w-40" />
+            <col className="w-24" />
+            <col className="w-32" />
+            <col className="w-16" />
+            <col className="w-20" />
+            <col className="w-20" />
+            <col className="w-16" />
+            <col className="w-8" />
           </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">
