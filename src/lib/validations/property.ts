@@ -14,9 +14,9 @@ export const UnitSchema = z.object({
 
 export const BuildingSchema = z.object({
   label:       z.string().min(1, "Building label is required"),
-  street:      z.string().min(1, "Street is required"),
-  houseNumber: z.string().min(1, "House number is required"),
-  postalCode:  z.string().min(1, "Postal code is required"),
+  street:      z.string().default(""),
+  houseNumber: z.string().default(""),
+  postalCode:  z.string().default(""),
   city:        z.string().default("Berlin"),
   yearBuilt:   z.number().int().optional(),
   floors:      z.number().int().positive().optional(),
