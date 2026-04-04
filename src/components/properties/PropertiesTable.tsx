@@ -14,7 +14,8 @@ interface Property {
   number: string;
   type: "WEG" | "MV";
   status: "ACTIVE" | "PENDING" | "ARCHIVED";
-  manager: { name: string };
+  manager:   { name: string };
+  accountant:{ name: string };
   _count: { buildings: number };
   unitCount: number;
 }
@@ -23,9 +24,11 @@ interface PropertiesTableProps {
   properties: Property[];
 }
 
+const th = "text-left px-3 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide whitespace-nowrap";
+
 export function PropertiesTable({ properties }: PropertiesTableProps) {
-  const [search, setSearch]           = useState("");
-  const [typeFilter, setTypeFilter]   = useState<"ALL" | "WEG" | "MV">("ALL");
+  const [search, setSearch]               = useState("");
+  const [typeFilter, setTypeFilter]       = useState<"ALL" | "WEG" | "MV">("ALL");
   const [managerFilter, setManagerFilter] = useState("ALL");
 
   const managers = useMemo(
@@ -40,7 +43,7 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.number.toLowerCase().includes(search.toLowerCase()) ||
         p.address.toLowerCase().includes(search.toLowerCase());
-      const matchType = typeFilter === "ALL" || p.type === typeFilter;
+      const matchType    = typeFilter    === "ALL" || p.type         === typeFilter;
       const matchManager = managerFilter === "ALL" || p.manager.name === managerFilter;
       return matchSearch && matchType && matchManager;
     });
@@ -55,7 +58,6 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <h1 className="text-lg font-semibold text-primary">Properties</h1>
 
       {/* KPI row */}
@@ -73,7 +75,7 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
           placeholder="Search properties…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent w-56"
+          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent w-52"
         />
         <select
           value={typeFilter}
@@ -99,51 +101,61 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
         </Link>
       </div>
 
-      {/* Table */}
-      <div className="border border-border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
+      {/* Table — horizontally scrollable on narrow screens */}
+      <div className="border border-border rounded-lg overflow-x-auto">
+        <table className="w-full text-sm table-fixed min-w-[780px]">
+          <colgroup>
+            <col />              {/* Property — fluid */}
+            <col className="w-28" />  {/* Number */}
+            <col className="w-16" />  {/* Type */}
+            <col className="w-16" />  {/* Bldgs */}
+            <col className="w-14" />  {/* Units */}
+            <col className="w-32" />  {/* Manager */}
+            <col className="w-32" />  {/* Accountant */}
+            <col className="w-24" />  {/* Status */}
+          </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Property</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Number</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Type</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Buildings</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Units</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Manager</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Status</th>
+              <th className={th}>Property</th>
+              <th className={th}>Number</th>
+              <th className={th}>Type</th>
+              <th className={th}>Bldgs</th>
+              <th className={th}>Units</th>
+              <th className={th}>Manager</th>
+              <th className={th}>Accountant</th>
+              <th className={th}>Status</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-tertiary">
+                <td colSpan={8} className="px-4 py-8 text-center text-tertiary">
                   No properties found.
                 </td>
               </tr>
             ) : (
-              filtered.map((p, i) => (
+              filtered.map((p) => (
                 <tr
                   key={p.id}
-                  className={`border-b border-border last:border-0 hover:bg-bg-1 transition-colors cursor-pointer ${
-                    i % 2 === 0 ? "bg-bg-0" : "bg-bg-0"
-                  }`}
+                  className="border-b border-border last:border-0 hover:bg-bg-1 transition-colors"
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3">
                     <Link href={`/properties/${p.id}`} className="block">
                       <span className="font-medium text-primary hover:text-accent transition-colors">
                         {p.name}
                       </span>
-                      <span className="block text-xs text-tertiary">{p.address}</span>
+                      <span className="block text-xs text-tertiary truncate">{p.address}</span>
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-secondary font-mono text-xs">{p.number}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3 text-secondary font-mono text-xs">{p.number}</td>
+                  <td className="px-3 py-3">
                     <Badge variant={p.type.toLowerCase() as "weg" | "mv"} />
                   </td>
-                  <td className="px-4 py-3 text-secondary">{p._count.buildings}</td>
-                  <td className="px-4 py-3 text-secondary">{p.unitCount}</td>
-                  <td className="px-4 py-3 text-secondary">{p.manager.name}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3 text-secondary text-center">{p._count.buildings}</td>
+                  <td className="px-3 py-3 text-secondary text-center">{p.unitCount}</td>
+                  <td className="px-3 py-3 text-secondary truncate">{p.manager.name}</td>
+                  <td className="px-3 py-3 text-secondary truncate">{p.accountant.name}</td>
+                  <td className="px-3 py-3">
                     <StatusDot status={p.status.toLowerCase() as "active" | "pending" | "archived"} />
                   </td>
                 </tr>

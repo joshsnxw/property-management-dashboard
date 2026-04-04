@@ -5,7 +5,8 @@ import { PropertiesTable } from "@/components/properties/PropertiesTable";
 export default async function PropertiesPage() {
   const properties = await prisma.property.findMany({
     include: {
-      manager: true,
+      manager:   true,
+      accountant:true,
       _count: { select: { buildings: true } },
     },
     orderBy: { createdAt: "desc" },
