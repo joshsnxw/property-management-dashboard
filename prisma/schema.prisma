@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,92 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model Property {
+  id         String       @id @default(cuid())
+  name       String
+  address    String
+  number     String       @unique
+  type       PropertyType
+  status     Status       @default(ACTIVE)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  managerId    String
+  accountantId String
+  manager      Staff      @relation("manager",    fields: [managerId],    references: [id])
+  accountant   Staff      @relation("accountant", fields: [accountantId], references: [id])
+
+  buildings  Building[]
+  documents  Document[]
+}
+
+model Building {
+  id          String   @id @default(cuid())
+  label       String
+  street      String
+  houseNumber String
+  postalCode  String
+  city        String   @default("Berlin")
+  yearBuilt   Int?
+  floors      Int?
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  units       Unit[]
+}
+
+model Unit {
+  id               String   @id @default(cuid())
+  number           String
+  type             UnitType
+  floor            String?
+  entrance         String?
+  sizeSqm          Float?
+  coOwnershipShare String?
+  yearBuilt        Int?
+  rooms            Float?
+  buildingId       String
+  building         Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+}
+
+model Staff {
+  id        String     @id @default(cuid())
+  name      String
+  role      StaffRole
+  managed   Property[] @relation("manager")
+  accounted Property[] @relation("accountant")
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  name       String
+  url        String
+  sizeBytes  Int?
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+enum PropertyType {
+  WEG
+  MV
+}
+
+enum Status {
+  ACTIVE
+  PENDING
+  ARCHIVED
+}
+
+enum UnitType {
+  APARTMENT
+  OFFICE
+  GARDEN
+  PARKING
+}
+
+enum StaffRole {
+  MANAGER
+  ACCOUNTANT
 }
