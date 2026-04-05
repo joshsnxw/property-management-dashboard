@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/Button";
 import { BuildingData } from "./Step2Buildings";
 
 export interface UnitRow {
-  number:          string;
-  type:            "APARTMENT" | "OFFICE" | "GARDEN" | "PARKING";
-  floor:           string;
-  entrance:        string;
-  sizeSqm:         string;
-  rooms:           string;
-  buildingIndex:   number;
+  number:           string;
+  type:             "APARTMENT" | "OFFICE" | "GARDEN" | "PARKING";
+  floor:            string;
+  entrance:         string;
+  sizeSqm:          string;
+  coOwnershipShare: string;
+  yearBuilt:        string;
+  rooms:            string;
+  buildingIndex:    number;
 }
 
 const UNIT_TYPES = ["APARTMENT", "OFFICE", "GARDEN", "PARKING"] as const;
@@ -24,7 +26,7 @@ interface Props {
 }
 
 function emptyUnit(buildingIndex = 0): UnitRow {
-  return { number: "", type: "APARTMENT", floor: "", entrance: "", sizeSqm: "", rooms: "", buildingIndex };
+  return { number: "", type: "APARTMENT", floor: "", entrance: "", sizeSqm: "", coOwnershipShare: "", yearBuilt: "", rooms: "", buildingIndex };
 }
 
 export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
@@ -113,13 +115,15 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
       <div ref={tableRef} className="border border-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <colgroup>
-            <col className="w-40" />
-            <col className="w-24" />
+            <col className="w-36" />
+            <col className="w-20" />
             <col className="w-32" />
+            <col className="w-14" />
             <col className="w-16" />
-            <col className="w-20" />
-            <col className="w-20" />
             <col className="w-16" />
+            <col className="w-24" />
+            <col className="w-16" />
+            <col className="w-14" />
             <col className="w-8" />
           </colgroup>
           <thead>
@@ -130,6 +134,8 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
               <th className={thClass}>Floor</th>
               <th className={thClass}>Entrance</th>
               <th className={thClass}>Size m²</th>
+              <th className={thClass}>Co-ownership</th>
+              <th className={thClass}>Built</th>
               <th className={thClass}>Rooms</th>
               <th className={thClass}></th>
             </tr>
@@ -137,7 +143,7 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
           <tbody>
             {units.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-tertiary text-sm">
+                <td colSpan={10} className="px-4 py-6 text-center text-tertiary text-sm">
                   No units yet. Click &quot;+ Add unit&quot; to start.
                 </td>
               </tr>
@@ -150,7 +156,7 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
                       data-row={i} data-col={0}
                       value={u.buildingIndex}
                       onChange={(e) => update(i, { buildingIndex: parseInt(e.target.value) })}
-                      onKeyDown={(e) => handleKeyDown(e, i, 0, 7)}
+                      onKeyDown={(e) => handleKeyDown(e, i, 0, 9)}
                       className="w-full px-2 py-1 text-sm bg-transparent text-primary focus:outline-none focus:bg-bg-1 rounded"
                     >
                       {buildings.map((b, bi) => (
@@ -163,10 +169,9 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
                     <input
                       data-row={i} data-col={1}
                       className={`${tdInput} ${errors[`u${i}_number`] ? "ring-1 ring-red rounded" : ""}`}
-                      placeholder="1L"
                       value={u.number}
                       onChange={(e) => update(i, { number: e.target.value })}
-                      onKeyDown={(e) => handleKeyDown(e, i, 1, 7)}
+                      onKeyDown={(e) => handleKeyDown(e, i, 1, 9)}
                     />
                     {errors[`u${i}_number`] && (
                       <p className="text-xs text-red mt-0.5 px-2">{errors[`u${i}_number`]}</p>
@@ -178,7 +183,7 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
                       data-row={i} data-col={2}
                       value={u.type}
                       onChange={(e) => update(i, { type: e.target.value as UnitRow["type"] })}
-                      onKeyDown={(e) => handleKeyDown(e, i, 2, 7)}
+                      onKeyDown={(e) => handleKeyDown(e, i, 2, 9)}
                       className="w-full px-2 py-1 text-sm bg-transparent text-primary focus:outline-none focus:bg-bg-1 rounded"
                     >
                       {UNIT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -189,10 +194,9 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
                     <input
                       data-row={i} data-col={3}
                       className={tdInput}
-                      placeholder="1"
                       value={u.floor}
                       onChange={(e) => update(i, { floor: e.target.value })}
-                      onKeyDown={(e) => handleKeyDown(e, i, 3, 7)}
+                      onKeyDown={(e) => handleKeyDown(e, i, 3, 9)}
                     />
                   </td>
                   {/* Entrance */}
@@ -200,10 +204,9 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
                     <input
                       data-row={i} data-col={4}
                       className={tdInput}
-                      placeholder="A"
                       value={u.entrance}
                       onChange={(e) => update(i, { entrance: e.target.value })}
-                      onKeyDown={(e) => handleKeyDown(e, i, 4, 7)}
+                      onKeyDown={(e) => handleKeyDown(e, i, 4, 9)}
                     />
                   </td>
                   {/* Size */}
@@ -212,22 +215,41 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
                       type="number"
                       data-row={i} data-col={5}
                       className={tdInput}
-                      placeholder="68"
                       value={u.sizeSqm}
                       onChange={(e) => update(i, { sizeSqm: e.target.value })}
-                      onKeyDown={(e) => handleKeyDown(e, i, 5, 7)}
+                      onKeyDown={(e) => handleKeyDown(e, i, 5, 9)}
+                    />
+                  </td>
+                  {/* Co-ownership */}
+                  <td className="px-1 py-0.5">
+                    <input
+                      data-row={i} data-col={6}
+                      className={tdInput}
+                      value={u.coOwnershipShare}
+                      onChange={(e) => update(i, { coOwnershipShare: e.target.value })}
+                      onKeyDown={(e) => handleKeyDown(e, i, 6, 9)}
+                    />
+                  </td>
+                  {/* Built */}
+                  <td className="px-1 py-0.5">
+                    <input
+                      type="number"
+                      data-row={i} data-col={7}
+                      className={tdInput}
+                      value={u.yearBuilt}
+                      onChange={(e) => update(i, { yearBuilt: e.target.value })}
+                      onKeyDown={(e) => handleKeyDown(e, i, 7, 9)}
                     />
                   </td>
                   {/* Rooms */}
                   <td className="px-1 py-0.5">
                     <input
                       type="number"
-                      data-row={i} data-col={6}
+                      data-row={i} data-col={8}
                       className={tdInput}
-                      placeholder="2.5"
                       value={u.rooms}
                       onChange={(e) => update(i, { rooms: e.target.value })}
-                      onKeyDown={(e) => handleKeyDown(e, i, 6, 7)}
+                      onKeyDown={(e) => handleKeyDown(e, i, 8, 9)}
                     />
                   </td>
                   {/* Delete */}

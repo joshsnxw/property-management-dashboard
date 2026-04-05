@@ -96,8 +96,10 @@ export function WizardShell() {
         })),
         units: units.map((u) => ({
           ...u,
-          sizeSqm: u.sizeSqm ? parseFloat(String(u.sizeSqm)) : undefined,
-          rooms:   u.rooms   ? parseFloat(String(u.rooms))   : undefined,
+          sizeSqm:          u.sizeSqm          ? parseFloat(u.sizeSqm)    : undefined,
+          rooms:            u.rooms            ? parseFloat(u.rooms)      : undefined,
+          yearBuilt:        u.yearBuilt        ? parseInt(u.yearBuilt)    : undefined,
+          coOwnershipShare: u.coOwnershipShare || undefined,
         })),
       };
 

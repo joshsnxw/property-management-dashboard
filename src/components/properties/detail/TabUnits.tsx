@@ -171,13 +171,15 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
       <div className="border border-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <colgroup>
-            <col className="w-40" />
-            <col className="w-24" />
+            <col className="w-36" />
+            <col className="w-20" />
             <col className="w-32" />
+            <col className="w-14" />
             <col className="w-16" />
-            <col className="w-20" />
-            <col className="w-20" />
             <col className="w-16" />
+            <col className="w-24" />
+            <col className="w-16" />
+            <col className="w-14" />
             <col className="w-8" />
           </colgroup>
           <thead>
@@ -188,6 +190,8 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
               <th className={thClass}>Floor</th>
               <th className={thClass}>Entrance</th>
               <th className={thClass}>Size m²</th>
+              <th className={thClass}>Co-ownership</th>
+              <th className={thClass}>Built</th>
               <th className={thClass}>Rooms</th>
               <th className={thClass}></th>
             </tr>
@@ -195,7 +199,7 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-tertiary text-sm">
+                <td colSpan={10} className="px-4 py-6 text-center text-tertiary text-sm">
                   No units found.
                 </td>
               </tr>
@@ -230,6 +234,8 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
                   <td className="px-1 py-0.5">{cellInput(u, "floor")}</td>
                   <td className="px-1 py-0.5">{cellInput(u, "entrance")}</td>
                   <td className="px-1 py-0.5">{cellInput(u, "sizeSqm")}</td>
+                  <td className="px-1 py-0.5">{cellInput(u, "coOwnershipShare")}</td>
+                  <td className="px-1 py-0.5">{cellInput(u, "yearBuilt")}</td>
                   <td className="px-1 py-0.5">{cellInput(u, "rooms")}</td>
                   <td className="px-2 py-0.5">
                     <button
