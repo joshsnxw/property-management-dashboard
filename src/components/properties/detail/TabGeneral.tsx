@@ -223,9 +223,9 @@ export function TabGeneral({ property, onUpdate }: Props) {
         </div>
       )}
 
-      {/* Danger zone */}
-      {!editing && (
-        <div className="pt-4 border-t border-border mt-2">
+      {/* Danger zone — only visible while editing */}
+      {editing && (
+        <div className="pt-4 border-t border-red/20 mt-2">
           <p className="text-xs text-tertiary mb-2">Danger zone</p>
           <Button
             variant="danger"
