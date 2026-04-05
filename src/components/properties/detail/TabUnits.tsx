@@ -37,6 +37,31 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
     );
   }
 
+  function moveUnit(unitId: string, oldBuildingId: string, updated: Unit) {
+    onUpdate(
+      buildings.map((b) => {
+        if (b.id === oldBuildingId) return { ...b, units: b.units.filter((u) => u.id !== unitId) };
+        if (b.id === updated.buildingId) return { ...b, units: [...b.units, updated] };
+        return b;
+      })
+    );
+  }
+
+  async function saveBuildingId(unit: Unit, newBuildingId: string) {
+    if (newBuildingId === unit.buildingId) return;
+    try {
+      const res = await fetch(`/api/units/${unit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buildingId: newBuildingId }),
+      });
+      if (!res.ok) { toast("Failed to move unit", "error"); return; }
+      moveUnit(unit.id, unit.buildingId, await res.json());
+    } catch {
+      toast("Network error — could not move unit", "error");
+    }
+  }
+
   function removeUnitFromState(id: string) {
     onUpdate(
       buildings.map((b) => ({ ...b, units: b.units.filter((u) => u.id !== id) }))
@@ -177,10 +202,22 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
             ) : (
               filtered.map((u) => (
                 <tr key={u.id} className="border-b border-border last:border-0 hover:bg-bg-1">
-                  <td className="px-2 py-0.5 text-xs text-tertiary whitespace-nowrap">
-                    {u.buildingLabel}
+                  <td className="px-1 py-0.5">
+                    {buildings.length > 1 ? (
+                      <select
+                        value={u.buildingId}
+                        onChange={(e) => saveBuildingId(u, e.target.value)}
+                        className="w-full px-2 py-1 text-xs bg-transparent text-secondary focus:outline-none focus:bg-bg-1 rounded"
+                      >
+                        {buildings.map((b) => (
+                          <option key={b.id} value={b.id}>{b.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="px-2 text-xs text-tertiary">{u.buildingLabel}</span>
+                    )}
                   </td>
-                  <td className="px-1 py-0.5">{cellInput(u, "number", "1L")}</td>
+                  <td className="px-1 py-0.5">{cellInput(u, "number")}</td>
                   <td className="px-1 py-0.5">
                     <select
                       defaultValue={u.type}
@@ -190,10 +227,10 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
                       {UNIT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </td>
-                  <td className="px-1 py-0.5">{cellInput(u, "floor", "1")}</td>
-                  <td className="px-1 py-0.5">{cellInput(u, "entrance", "A")}</td>
-                  <td className="px-1 py-0.5">{cellInput(u, "sizeSqm", "68")}</td>
-                  <td className="px-1 py-0.5">{cellInput(u, "rooms", "2.5")}</td>
+                  <td className="px-1 py-0.5">{cellInput(u, "floor")}</td>
+                  <td className="px-1 py-0.5">{cellInput(u, "entrance")}</td>
+                  <td className="px-1 py-0.5">{cellInput(u, "sizeSqm")}</td>
+                  <td className="px-1 py-0.5">{cellInput(u, "rooms")}</td>
                   <td className="px-2 py-0.5">
                     <button
                       type="button"
