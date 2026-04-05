@@ -1,12 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { useToast } from "@/components/ui/Toast";
-import { Document } from "./types";
+import { PrefillDialog, ExtractedProperty } from "@/components/ui/PrefillDialog";
+import { Document, Building } from "./types";
 
 interface Props {
-  propertyId: string;
-  documents:  Document[];
+  propertyId:       string;
+  documents:        Document[];
+  onDocumentAdded:  (doc: Document) => void;
+  onPrefillApplied: (buildings: Building[]) => void;
 }
 
 function formatBytes(bytes: number | null): string {
@@ -16,25 +20,124 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function TabDocuments({ propertyId, documents }: Props) {
+export function TabDocuments({ propertyId, documents, onDocumentAdded, onPrefillApplied }: Props) {
   const { toast } = useToast();
+  const [uploading, setUploading]     = useState(false);
+  const [extracted, setExtracted]     = useState<ExtractedProperty | null>(null);
+  const [applying, setApplying]       = useState(false);
 
-  function handleFiles(files: FileList) {
-    // Placeholder — Vercel Blob integration in Phase 9
-    toast(`Upload ready: ${files[0].name} (Vercel Blob not yet configured)`, "info");
-    void propertyId;
+  async function handleFiles(files: FileList) {
+    const file = files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // 1. Upload to Vercel Blob
+      const form = new FormData();
+      form.append("file", file);
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
+      if (!uploadRes.ok) { toast("Upload failed", "error"); return; }
+      const { url, name, sizeBytes } = await uploadRes.json();
+
+      // 2. Save document record
+      const docRes = await fetch(`/api/properties/${propertyId}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, url, sizeBytes }),
+      });
+      if (!docRes.ok) { toast("Failed to save document", "error"); return; }
+      onDocumentAdded(await docRes.json());
+      toast("Document uploaded", "success");
+
+      // 3. If PDF, attempt Teilungserklärung extraction
+      if (file.type === "application/pdf") {
+        toast("Analysing document…", "info");
+        const parseRes = await fetch("/api/parse-teilungserklaerung", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ documentUrl: url }),
+        });
+        if (parseRes.ok) {
+          const data = await parseRes.json();
+          if (data.buildings?.length) setExtracted(data);
+        }
+      }
+    } catch {
+      toast("Network error", "error");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function applyPrefill() {
+    if (!extracted) return;
+    setApplying(true);
+    try {
+      const createdBuildings: Building[] = [];
+
+      for (const b of extracted.buildings) {
+        // Create building
+        const bRes = await fetch(`/api/properties/${propertyId}/buildings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label:       b.label,
+            street:      (b as any).street      ?? "",
+            houseNumber: (b as any).houseNumber ?? "",
+            postalCode:  (b as any).postalCode  ?? "",
+            city:        (b as any).city        ?? "",
+            yearBuilt:   (b as any).yearBuilt   ?? null,
+            floors:      (b as any).floors      ?? null,
+          }),
+        });
+        if (!bRes.ok) continue;
+        const building: Building = await bRes.json();
+
+        // Create units for this building
+        const units: Building["units"] = [];
+        for (const u of (b.units ?? [])) {
+          const uRes = await fetch(`/api/properties/${propertyId}/units`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              buildingId:       building.id,
+              number:           u.number           ?? "",
+              type:             u.type             ?? "APARTMENT",
+              floor:            (u as any).floor            ?? null,
+              entrance:         (u as any).entrance         ?? null,
+              sizeSqm:          (u as any).sizeSqm          ?? null,
+              coOwnershipShare: (u as any).coOwnershipShare ?? null,
+              yearBuilt:        (u as any).yearBuilt        ?? null,
+              rooms:            (u as any).rooms            ?? null,
+            }),
+          });
+          if (uRes.ok) units.push(await uRes.json());
+        }
+
+        createdBuildings.push({ ...building, units });
+      }
+
+      onPrefillApplied(createdBuildings);
+      toast(`Added ${createdBuildings.length} building(s) from document`, "success");
+      setExtracted(null);
+    } catch {
+      toast("Failed to apply prefill", "error");
+    } finally {
+      setApplying(false);
+    }
   }
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Upload zone */}
-      <UploadZone onFiles={handleFiles} label="Drop documents here or click to upload" />
+      <UploadZone
+        onFiles={handleFiles}
+        label={uploading ? "Uploading…" : "Drop documents here or click to upload"}
+      />
 
-      {/* Document list */}
       {documents.length === 0 ? (
         <p className="text-sm text-tertiary text-center py-4">No documents uploaded yet.</p>
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-bg-1 border-b border-border">
@@ -68,6 +171,14 @@ export function TabDocuments({ propertyId, documents }: Props) {
           </table>
         </div>
       )}
+
+      <PrefillDialog
+        open={extracted !== null}
+        data={extracted ?? { buildings: [] }}
+        applying={applying}
+        onApply={applyPrefill}
+        onCancel={() => setExtracted(null)}
+      />
     </div>
   );
 }

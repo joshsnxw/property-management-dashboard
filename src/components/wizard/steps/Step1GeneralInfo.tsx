@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { UploadZone } from "@/components/ui/UploadZone";
+import { useToast } from "@/components/ui/Toast";
+import { ExtractedProperty } from "@/components/ui/PrefillDialog";
 
 export interface Step1Data {
   type: "WEG" | "MV" | null;
@@ -21,10 +23,47 @@ interface Props {
   data: Step1Data;
   onChange: (data: Step1Data) => void;
   errors: Record<string, string>;
+  onParsed?: (data: ExtractedProperty) => void;
 }
 
-export function Step1GeneralInfo({ data, onChange, errors }: Props) {
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+export function Step1GeneralInfo({ data, onChange, errors, onParsed }: Props) {
+  const { toast } = useToast();
+  const [staff, setStaff]           = useState<StaffMember[]>([]);
+  const [uploading, setUploading]   = useState(false);
+
+  async function handleFiles(files: FileList) {
+    const file = files[0];
+    if (!file || file.type !== "application/pdf") {
+      toast("Please upload a PDF file", "error");
+      return;
+    }
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
+      if (!uploadRes.ok) { toast("Upload failed", "error"); return; }
+      const { url } = await uploadRes.json();
+
+      toast("Analysing document…", "info");
+      const parseRes = await fetch("/api/parse-teilungserklaerung", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentUrl: url }),
+      });
+      if (!parseRes.ok) { toast("Could not extract data from document", "error"); return; }
+      const extracted = await parseRes.json();
+      if (extracted.buildings?.length) {
+        onParsed?.(extracted);
+      } else {
+        toast("No property data found in document", "info");
+      }
+    } catch {
+      toast("Network error", "error");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/staff")
@@ -131,7 +170,11 @@ export function Step1GeneralInfo({ data, onChange, errors }: Props) {
       {/* Upload */}
       <div>
         <p className={labelClass}>Teilungserklärung</p>
-        <UploadZone label="Drop Teilungserklärung here or click to upload" />
+        <UploadZone
+          onFiles={handleFiles}
+          label={uploading ? "Analysing" : "Drop Teilungserklärung here or click to upload"}
+          analysing={uploading}
+        />
       </div>
     </div>
   );

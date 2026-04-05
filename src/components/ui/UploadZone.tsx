@@ -1,15 +1,17 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 
 interface UploadZoneProps {
   onFiles?: (files: FileList) => void;
   label?: string;
+  analysing?: boolean;
 }
 
 export function UploadZone({
   onFiles,
   label = "Drop files here or click to upload",
+  analysing = false,
 }: UploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -33,7 +35,7 @@ export function UploadZone({
       className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border-med rounded-lg p-8 text-sm text-tertiary hover:border-accent hover:text-accent transition-colors cursor-pointer"
     >
       <UploadIcon />
-      <span>{label}</span>
+      <span>{analysing ? <TypingLabel text={label} /> : label}</span>
       <input
         ref={inputRef}
         type="file"
@@ -42,6 +44,22 @@ export function UploadZone({
         onChange={handleChange}
       />
     </div>
+  );
+}
+
+function TypingLabel({ text }: { text: string }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setCount((c) => (c + 1) % 4), 400);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <>
+      {text}
+      {[0, 1, 2].map((i) => (
+        <span key={i} style={{ opacity: i < count ? 1 : 0 }}>.</span>
+      ))}
+    </>
   );
 }
 

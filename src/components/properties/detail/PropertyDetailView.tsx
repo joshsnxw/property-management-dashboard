@@ -61,6 +61,8 @@ export function PropertyDetailView({ initial }: Props) {
             <TabDocuments
               propertyId={property.id}
               documents={property.documents}
+              onDocumentAdded={(doc) => setProperty((p) => ({ ...p, documents: [doc, ...p.documents] }))}
+              onPrefillApplied={(newBuildings) => updateBuildings([...property.buildings, ...newBuildings])}
             />
           )}
         </div>

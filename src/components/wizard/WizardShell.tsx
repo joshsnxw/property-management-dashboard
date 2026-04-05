@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/Toast";
 import { Step1GeneralInfo, Step1Data } from "./steps/Step1GeneralInfo";
 import { Step2Buildings, BuildingData } from "./steps/Step2Buildings";
 import { Step3Units, UnitRow } from "./steps/Step3Units";
+import { PrefillDialog, ExtractedProperty } from "@/components/ui/PrefillDialog";
 
 const STEPS = ["General info", "Buildings", "Units"];
 
@@ -36,8 +37,44 @@ export function WizardShell() {
   const [step1, setStep1]         = useState<Step1Data>(emptyStep1);
   const [buildings, setBuildings] = useState<BuildingData[]>([{ ...emptyBuilding }]);
   const [units, setUnits]         = useState<UnitRow[]>([]);
-  const [saving, setSaving]       = useState(false);
-  const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [saving, setSaving]           = useState(false);
+  const [errors, setErrors]           = useState<Record<string, string>>({});
+  const [pendingPrefill, setPendingPrefill] = useState<ExtractedProperty | null>(null);
+
+  function applyPrefill(extracted: ExtractedProperty) {
+    if (extracted.name) setStep1((prev) => ({ ...prev, name: extracted.name! }));
+    if (extracted.type === "WEG" || extracted.type === "MV") {
+      setStep1((prev) => ({ ...prev, type: extracted.type as "WEG" | "MV" }));
+    }
+    if (extracted.buildings.length > 0) {
+      setBuildings(extracted.buildings.map((b) => ({
+        label:       b.label ?? "",
+        street:      (b as any).street      ?? "",
+        houseNumber: (b as any).houseNumber ?? "",
+        postalCode:  (b as any).postalCode  ?? "",
+        city:        (b as any).city        ?? "",
+        yearBuilt:   (b as any).yearBuilt   ?? undefined,
+        floors:      (b as any).floors      ?? undefined,
+      })));
+      setUnits(
+        extracted.buildings.flatMap((b, bi) =>
+          (b.units ?? []).map((u) => ({
+            number:           u.number           ?? "",
+            type:             (["APARTMENT","OFFICE","GARDEN","PARKING"].includes(u.type) ? u.type : "APARTMENT") as UnitRow["type"],
+            floor:            (u as any).floor            ?? "",
+            entrance:         (u as any).entrance         ?? "",
+            sizeSqm:          (u as any).sizeSqm != null   ? String((u as any).sizeSqm)  : "",
+            coOwnershipShare: (u as any).coOwnershipShare ?? "",
+            yearBuilt:        (u as any).yearBuilt != null ? String((u as any).yearBuilt) : "",
+            rooms:            (u as any).rooms != null     ? String((u as any).rooms)     : "",
+            buildingIndex:    bi,
+          }))
+        )
+      );
+    }
+    setPendingPrefill(null);
+    toast("Fields prefilled from document", "success");
+  }
 
   function validateStep1(): boolean {
     const e: Record<string, string> = {};
@@ -154,7 +191,7 @@ export function WizardShell() {
       {/* Step content */}
       <div className={`bg-bg-0 border border-border rounded-lg ${step === 2 ? "p-4" : "p-6"}`}>
         {step === 0 && (
-          <Step1GeneralInfo data={step1} onChange={setStep1} errors={errors} />
+          <Step1GeneralInfo data={step1} onChange={setStep1} errors={errors} onParsed={setPendingPrefill} />
         )}
         {step === 1 && (
           <Step2Buildings
@@ -172,6 +209,14 @@ export function WizardShell() {
           />
         )}
       </div>
+
+      <PrefillDialog
+        open={pendingPrefill !== null}
+        data={pendingPrefill ?? { buildings: [] }}
+        applying={false}
+        onApply={() => pendingPrefill && applyPrefill(pendingPrefill)}
+        onCancel={() => setPendingPrefill(null)}
+      />
 
       {/* Navigation */}
       <div className="flex justify-between">
