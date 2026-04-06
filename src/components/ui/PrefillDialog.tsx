@@ -35,7 +35,7 @@ export function PrefillDialog({ open, data, onApply, onCancel, applying }: Props
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
       <div className="relative bg-bg-0 border border-border rounded-lg shadow-lg p-6 w-full max-w-lg mx-4 flex flex-col gap-4">
         <div>
-          <h2 className="text-sm font-semibold text-primary">Prefill from Teilungserklärung?</h2>
+          <h2 className="text-sm font-semibold text-primary">Prefill from declaration of division?</h2>
           <p className="text-xs text-tertiary mt-1">The following data was extracted from the document.</p>
         </div>
 

@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         },
       },
       documentAnnotationPrompt:
-        "Extract all structured property data from this Teilungserklärung. " +
+        "Extract all structured property data from this declaration of division (Teilungserklärung). " +
         "Use null for missing fields. " +
         "Preserve Miteigentumsanteil as fractions, e.g. '153/10000'. " +
         "Normalise floor (Geschoss) to: 'UG' (Untergeschoss), 'EG' (Erdgeschoss), or integer string ('1', '2', '3') for upper floors.",
