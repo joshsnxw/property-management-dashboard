@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 
 const navItems = [
   { label: "Properties", href: "/properties", icon: BuildingIcon },
+  { label: "Contacts",   href: "/contacts",   icon: ContactsIcon },
 ];
 
 export function Sidebar() {
@@ -116,6 +117,16 @@ function BuildingIcon({ active }: { active: boolean }) {
       <rect x="1" y="4" width="9" height="11" rx="1" stroke="currentColor" strokeWidth="1.3" />
       <path d="M10 7h4a1 1 0 011 1v7H10V7z" stroke="currentColor" strokeWidth="1.3" />
       <path d="M4 8h2M4 11h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ContactsIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className={active ? "text-accent" : "text-tertiary"}>
+      <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1 13c0-2.761 2.239-4 5-4s5 1.239 5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M12 7.5h3M13.5 6v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   );
 }
