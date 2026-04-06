@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { useToast } from "@/components/ui/Toast";
 import { ExtractedProperty } from "@/components/ui/PrefillDialog";
+import { FormField, fieldInputClass } from "@/components/ui/FormField";
 
 export interface Step1Data {
   type: "WEG" | "MV" | null;
@@ -103,10 +104,7 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
     onChange({ ...data, ...patch });
   }
 
-  const base       = "w-full px-3 py-2 text-sm rounded-md border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none transition-colors";
-  const inputClass = (empty: boolean) => `${base} ${showErrors && empty ? "border-red focus:border-red" : "border-border focus:border-accent"}`;
-  const labelClass = "block text-xs font-medium text-secondary mb-1";
-  const req        = <span className="text-red ml-0.5">*</span>;
+  const ic = (empty: boolean) => fieldInputClass(showErrors && empty);
 
   return (
     <div className="flex flex-col gap-5">
@@ -149,7 +147,7 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
 
       {/* Type selector */}
       <div>
-        <p className={labelClass}>Property type{req}</p>
+        <p className="block text-xs font-medium text-secondary mb-1">Property type<span className="text-red ml-0.5">*</span></p>
         <div className={`flex gap-3 rounded-md ${showErrors && !data.type ? "outline outline-1 outline-red" : ""}`}>
           {(["WEG", "MV"] as const).map((t) => (
             <button
@@ -169,35 +167,32 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
       </div>
 
       {/* Name */}
-      <div>
-        <label className={labelClass}>Property name{req}</label>
+      <FormField label="Property name" required>
         <input
           autoComplete="off"
-          className={inputClass(!data.name.trim())}
+          className={ic(!data.name.trim())}
           placeholder="Property name"
           value={data.name}
           onChange={(e) => set({ name: e.target.value })}
         />
-      </div>
+      </FormField>
 
       {/* Number */}
-      <div>
-        <label className={labelClass}>Internal number</label>
+      <FormField label="Internal number">
         <input
           autoComplete="off"
-          className={inputClass(false)}
+          className={ic(false)}
           placeholder="Auto-generated if left empty"
           value={data.number}
           onChange={(e) => set({ number: e.target.value })}
         />
-      </div>
+      </FormField>
 
       {/* Manager + Accountant */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className={labelClass}>Manager{req}</label>
+        <FormField label="Manager" required>
           <select
-            className={inputClass(!data.managerId)}
+            className={ic(!data.managerId)}
             value={data.managerId}
             onChange={(e) => set({ managerId: e.target.value })}
           >
@@ -206,11 +201,10 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className={labelClass}>Accountant{req}</label>
+        </FormField>
+        <FormField label="Accountant" required>
           <select
-            className={inputClass(!data.accountantId)}
+            className={ic(!data.accountantId)}
             value={data.accountantId}
             onChange={(e) => set({ accountantId: e.target.value })}
           >
@@ -219,18 +213,17 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
-        </div>
+        </FormField>
       </div>
 
       {/* Manual document upload */}
-      <div>
-        <p className={labelClass}>Documents</p>
+      <FormField label="Documents">
         <UploadZone
           onFiles={handleDocFiles}
           label={uploadingDoc ? "Uploading" : "Drop documents here or click to upload"}
           analysing={uploadingDoc}
         />
-      </div>
+      </FormField>
     </div>
   );
 }

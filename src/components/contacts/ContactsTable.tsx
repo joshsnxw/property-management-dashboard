@@ -6,6 +6,9 @@ import { KpiCard } from "@/components/ui/KpiCard";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Modal } from "@/components/ui/Modal";
+import { FormField, fieldInputClass } from "@/components/ui/FormField";
+import { TH_CLASS } from "@/lib/utils";
 
 interface Contact {
   id:          string;
@@ -32,8 +35,6 @@ const ROLE_CLASS: Record<ContactRole, string> = {
   MANAGER:    "bg-accent-dim text-accent border-accent-border",
   ACCOUNTANT: "bg-green-dim text-green border-green/20",
 };
-
-const th = "text-left px-3 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide whitespace-nowrap";
 
 const emptyForm = { name: "", role: "MANAGER" as ContactRole, street: "", houseNumber: "", postalCode: "", city: "" };
 
@@ -167,11 +168,8 @@ export function ContactsTable({ contacts: initial }: Props) {
     }
   }
 
+  const ic = (empty: boolean) => fieldInputClass(showErrors && empty);
   const selectClass = "px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent";
-  const inputBase   = "w-full px-3 py-2 text-sm rounded-md border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none transition-colors";
-  const inputClass  = (empty: boolean) => `${inputBase} ${showErrors && empty ? "border-red focus:border-red" : "border-border focus:border-accent"}`;
-  const labelClass  = "block text-xs font-medium text-secondary mb-1";
-  const req         = <span className="text-red ml-0.5">*</span>;
 
   return (
     <div className="flex flex-col gap-6">
@@ -246,13 +244,13 @@ export function ContactsTable({ contacts: initial }: Props) {
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-bg-1">
             <tr>
-              <th className={th}>Name</th>
-              <th className={th}>Role</th>
-              <th className={th}>Street</th>
-              <th className={th}>No.</th>
-              <th className={th}>Postal code</th>
-              <th className={th}>City</th>
-              <th className={th} />
+              <th className={TH_CLASS}>Name</th>
+              <th className={TH_CLASS}>Role</th>
+              <th className={TH_CLASS}>Street</th>
+              <th className={TH_CLASS}>No.</th>
+              <th className={TH_CLASS}>Postal code</th>
+              <th className={TH_CLASS}>City</th>
+              <th className={TH_CLASS} />
             </tr>
           </thead>
           <tbody>
@@ -293,116 +291,105 @@ export function ContactsTable({ contacts: initial }: Props) {
       </div>
 
       {/* Add / Edit modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
-          <div className="relative bg-bg-0 border border-border rounded-lg shadow-lg p-6 w-full max-w-md mx-4 flex flex-col gap-4">
-            <h2 className="text-sm font-semibold text-primary">
-              {editing ? "Edit contact" : "New contact"}
-            </h2>
+      <Modal open={modalOpen} onClose={closeModal}>
+        <h2 className="text-sm font-semibold text-primary">
+          {editing ? "Edit contact" : "New contact"}
+        </h2>
 
-            {/* Name + Role */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className={labelClass}>Name{req}</label>
-                <input
-                  autoComplete="off"
-                  className={inputClass(!form.name.trim())}
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Full name"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className={labelClass}>Role{req}</label>
-                <select
-                  className={`${inputBase} border-border focus:border-accent`}
-                  value={form.role}
-                  onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as ContactRole }))}
-                >
-                  <option value="MANAGER">Manager</option>
-                  <option value="ACCOUNTANT">Accountant</option>
-                </select>
-              </div>
-            </div>
+        {/* Name + Role */}
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Name" required className="col-span-2">
+            <input
+              autoComplete="off"
+              className={ic(!form.name.trim())}
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Full name"
+            />
+          </FormField>
+          <FormField label="Role" required className="col-span-2">
+            <select
+              className={ic(false)}
+              value={form.role}
+              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as ContactRole }))}
+            >
+              <option value="MANAGER">Manager</option>
+              <option value="ACCOUNTANT">Accountant</option>
+            </select>
+          </FormField>
+        </div>
 
-            {/* Address */}
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-2">
-                  <label className={labelClass}>Street</label>
-                  <input
-                    autoComplete="off"
-                    className={`${inputBase} border-border focus:border-accent`}
-                    value={form.street}
-                    onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))}
-                    placeholder="Street"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>No.</label>
-                  <input
-                    autoComplete="off"
-                    className={`${inputBase} border-border focus:border-accent`}
-                    value={form.houseNumber}
-                    onChange={(e) => setForm((f) => ({ ...f, houseNumber: e.target.value }))}
-                    placeholder="No."
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className={labelClass}>Postal code</label>
-                  <input
-                    autoComplete="off"
-                    className={`${inputBase} border-border focus:border-accent`}
-                    value={form.postalCode}
-                    onChange={(e) => setForm((f) => ({ ...f, postalCode: e.target.value }))}
-                    placeholder="Postal code"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>City</label>
-                  <input
-                    autoComplete="off"
-                    className={`${inputBase} border-border focus:border-accent`}
-                    value={form.city}
-                    onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                    placeholder="City"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {editing && (
-              <div className="pt-3 border-t border-red/20">
-                <p className="text-xs text-tertiary mb-2">Danger zone</p>
-                <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} disabled={deleting}>
-                  Delete contact
-                </Button>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="px-3 py-1.5 text-xs rounded-md border border-border text-secondary hover:text-primary transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="px-3 py-1.5 text-xs rounded-md bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-50"
-              >
-                {saving ? "Saving…" : editing ? "Save changes" : "Add contact"}
-              </button>
-            </div>
+        {/* Address */}
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-3 gap-2">
+            <FormField label="Street" className="col-span-2">
+              <input
+                autoComplete="off"
+                className={ic(false)}
+                value={form.street}
+                onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))}
+                placeholder="Street"
+              />
+            </FormField>
+            <FormField label="No.">
+              <input
+                autoComplete="off"
+                className={ic(false)}
+                value={form.houseNumber}
+                onChange={(e) => setForm((f) => ({ ...f, houseNumber: e.target.value }))}
+                placeholder="No."
+              />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <FormField label="Postal code">
+              <input
+                autoComplete="off"
+                className={ic(false)}
+                value={form.postalCode}
+                onChange={(e) => setForm((f) => ({ ...f, postalCode: e.target.value }))}
+                placeholder="Postal code"
+              />
+            </FormField>
+            <FormField label="City">
+              <input
+                autoComplete="off"
+                className={ic(false)}
+                value={form.city}
+                onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                placeholder="City"
+              />
+            </FormField>
           </div>
         </div>
-      )}
+
+        {editing && (
+          <div className="pt-3 border-t border-red/20">
+            <p className="text-xs text-tertiary mb-2">Danger zone</p>
+            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} disabled={deleting}>
+              Delete contact
+            </Button>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-1">
+          <button
+            type="button"
+            onClick={closeModal}
+            className="px-3 py-1.5 text-xs rounded-md border border-border text-secondary hover:text-primary transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="px-3 py-1.5 text-xs rounded-md bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-50"
+          >
+            {saving ? "Saving…" : editing ? "Save changes" : "Add contact"}
+          </button>
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={confirmDelete}

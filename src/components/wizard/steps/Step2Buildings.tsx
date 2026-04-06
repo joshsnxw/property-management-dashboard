@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { FormField, fieldInputClass } from "@/components/ui/FormField";
 
 export interface BuildingData {
   label:       string;
@@ -38,13 +39,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
     onChange(buildings.filter((_, idx) => idx !== i));
   }
 
-  const base = "w-full px-3 py-1.5 text-sm rounded-md border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none transition-colors";
-  const ok   = "border-border focus:border-accent";
-  const bad  = "border-red focus:border-red";
-
-  function ic(value: string) { return `${base} ${showErrors && !value.trim() ? bad : ok}`; }
-
-  const req = <span className="text-red ml-0.5">*</span>;
+  const ic = (empty: boolean) => fieldInputClass(showErrors && empty, "sm");
 
   return (
     <div className="flex flex-col gap-4">
@@ -68,93 +63,86 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
           </div>
 
           {/* Label */}
-          <div>
-            <label className="block text-xs font-medium text-secondary mb-1">Label{req}</label>
+          <FormField label="Label" required>
             <input
               autoComplete="off"
               placeholder="Label"
-              className={ic(b.label)}
+              className={ic(!b.label.trim())}
               value={b.label}
               onChange={(e) => update(i, { label: e.target.value })}
             />
-          </div>
+          </FormField>
 
           {/* Street + Number */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-2">
-              <label className="block text-xs font-medium text-secondary mb-1">Street{req}</label>
+            <FormField label="Street" required className="col-span-2">
               <input
                 autoComplete="off"
                 placeholder="Street"
-                className={ic(b.street)}
+                className={ic(!b.street.trim())}
                 value={b.street}
                 onChange={(e) => update(i, { street: e.target.value })}
               />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-secondary mb-1">No.{req}</label>
+            </FormField>
+            <FormField label="No." required>
               <input
                 autoComplete="off"
                 placeholder="No."
-                className={ic(b.houseNumber)}
+                className={ic(!b.houseNumber.trim())}
                 value={b.houseNumber}
                 onChange={(e) => update(i, { houseNumber: e.target.value })}
               />
-            </div>
+            </FormField>
           </div>
 
           {/* Postal + City */}
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-medium text-secondary mb-1">Postal code{req}</label>
+            <FormField label="Postal code" required>
               <input
                 autoComplete="off"
                 placeholder="Postal code"
-                className={ic(b.postalCode)}
+                className={ic(!b.postalCode.trim())}
                 value={b.postalCode}
                 onChange={(e) => update(i, { postalCode: e.target.value })}
               />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-secondary mb-1">City{req}</label>
+            </FormField>
+            <FormField label="City" required>
               <input
                 autoComplete="off"
                 placeholder="City"
-                className={ic(b.city)}
+                className={ic(!b.city.trim())}
                 value={b.city}
                 onChange={(e) => update(i, { city: e.target.value })}
               />
-            </div>
+            </FormField>
           </div>
 
           {/* Year + Floors */}
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-medium text-secondary mb-1">Year built</label>
+            <FormField label="Year built">
               <input
                 type="number"
                 autoComplete="off"
                 placeholder="Year built"
-                className={`${base} ${ok}`}
+                className={ic(false)}
                 value={b.yearBuilt ?? ""}
                 onChange={(e) =>
                   update(i, { yearBuilt: e.target.value ? parseInt(e.target.value) : undefined })
                 }
               />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-secondary mb-1">Floors</label>
+            </FormField>
+            <FormField label="Floors">
               <input
                 type="number"
                 autoComplete="off"
                 placeholder="Floors"
-                className={`${base} ${ok}`}
+                className={ic(false)}
                 value={b.floors ?? ""}
                 onChange={(e) =>
                   update(i, { floors: e.target.value ? parseInt(e.target.value) : undefined })
                 }
               />
-            </div>
+            </FormField>
           </div>
         </div>
       ))}

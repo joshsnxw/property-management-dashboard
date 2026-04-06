@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { StatusDot } from "@/components/ui/StatusDot";
+import { TH_CLASS } from "@/lib/utils";
 
 interface Property {
   id: string;
@@ -23,8 +24,6 @@ interface Property {
 interface PropertiesTableProps {
   properties: Property[];
 }
-
-const th = "text-left px-3 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide whitespace-nowrap";
 
 export function PropertiesTable({ properties }: PropertiesTableProps) {
   const [search, setSearch]               = useState("");
@@ -181,14 +180,14 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
           </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">
-              <th className={th}>Property</th>
-              <th className={th}>Number</th>
-              <th className={th}>Type</th>
-              <th className={th}>Buildings</th>
-              <th className={th}>Units</th>
-              <th className={th}>Manager</th>
-              <th className={th}>Accountant</th>
-              <th className={th}>Status</th>
+              <th className={TH_CLASS}>Property</th>
+              <th className={TH_CLASS}>Number</th>
+              <th className={TH_CLASS}>Type</th>
+              <th className={TH_CLASS}>Buildings</th>
+              <th className={TH_CLASS}>Units</th>
+              <th className={TH_CLASS}>Manager</th>
+              <th className={TH_CLASS}>Accountant</th>
+              <th className={TH_CLASS}>Status</th>
             </tr>
           </thead>
           <tbody>

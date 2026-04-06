@@ -5,6 +5,7 @@ import { UploadZone } from "@/components/ui/UploadZone";
 import { useToast } from "@/components/ui/Toast";
 import { PrefillDialog, ExtractedProperty } from "@/components/ui/PrefillDialog";
 import { Document, Building } from "./types";
+import { cn, TH_CLASS } from "@/lib/utils";
 
 interface Props {
   propertyId:         string;
@@ -157,9 +158,9 @@ export function TabDocuments({ propertyId, documents, onDocumentAdded, onDocumen
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-bg-1 border-b border-border">
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Name</th>
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Size</th>
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Uploaded</th>
+                <th className={cn(TH_CLASS, "px-4")}>Name</th>
+                <th className={cn(TH_CLASS, "px-4")}>Size</th>
+                <th className={cn(TH_CLASS, "px-4")}>Uploaded</th>
                   <th className="px-4 py-2.5"></th>
                 <th className="px-4 py-2.5"></th>
               </tr>
