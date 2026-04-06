@@ -29,10 +29,16 @@ const th = "text-left px-3 py-2.5 text-xs font-medium text-tertiary uppercase tr
 export function PropertiesTable({ properties }: PropertiesTableProps) {
   const [search, setSearch]               = useState("");
   const [typeFilter, setTypeFilter]       = useState<"ALL" | "WEG" | "MV">("ALL");
-  const [managerFilter, setManagerFilter] = useState("ALL");
+  const [managerFilter, setManagerFilter]     = useState("ALL");
+  const [accountantFilter, setAccountantFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter]         = useState("ALL");
 
   const managers = useMemo(
     () => Array.from(new Set(properties.map((p) => p.manager?.name).filter(Boolean))) as string[],
+    [properties]
+  );
+  const accountants = useMemo(
+    () => Array.from(new Set(properties.map((p) => p.accountant?.name).filter(Boolean))) as string[],
     [properties]
   );
 
@@ -43,11 +49,13 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.number.toLowerCase().includes(search.toLowerCase()) ||
         p.address.toLowerCase().includes(search.toLowerCase());
-      const matchType    = typeFilter    === "ALL" || p.type         === typeFilter;
-      const matchManager = managerFilter === "ALL" || p.manager?.name === managerFilter;
-      return matchSearch && matchType && matchManager;
+      const matchType      = typeFilter      === "ALL" || p.type            === typeFilter;
+      const matchManager   = managerFilter   === "ALL" || p.manager?.name   === managerFilter;
+      const matchAccountant = accountantFilter === "ALL" || p.accountant?.name === accountantFilter;
+      const matchStatus     = statusFilter     === "ALL" || p.status           === statusFilter;
+      return matchSearch && matchType && matchManager && matchAccountant && matchStatus;
     });
-  }, [properties, search, typeFilter, managerFilter]);
+  }, [properties, search, typeFilter, managerFilter, accountantFilter, statusFilter]);
 
   const kpis = useMemo(() => ({
     total:      properties.length,
@@ -96,6 +104,26 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
           {managers.map((m) => (
             <option key={m} value={m}>{m}</option>
           ))}
+        </select>
+        <select
+          value={accountantFilter}
+          onChange={(e) => setAccountantFilter(e.target.value)}
+          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
+        >
+          <option value="ALL">All accountants</option>
+          {accountants.map((a) => (
+            <option key={a} value={a}>{a}</option>
+          ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
+        >
+          <option value="ALL">All statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="PENDING">Pending</option>
+          <option value="ARCHIVED">Archived</option>
         </select>
         <Link href="/properties/new" className="ml-auto">
           <Button size="sm">+ New property</Button>
