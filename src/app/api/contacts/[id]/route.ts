@@ -1,31 +1,24 @@
 import { prisma } from "@/lib/prisma";
+import { parseBody, validate } from "@/lib/api";
+import { ContactSchema } from "@/lib/validations/contact";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  let body: unknown;
-  try { body = await request.json(); } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
 
-  const { name, role, street, houseNumber, postalCode, city } = body as {
-    name?: string;
-    role?: string;
-    street?: string | null;
-    houseNumber?: string | null;
-    postalCode?: string | null;
-    city?: string | null;
-  };
+  const body = await parseBody(request);
+  if (!body.ok) return body.response;
 
-  if (!name?.trim() || !["MANAGER", "ACCOUNTANT"].includes(role ?? "")) {
-    return Response.json({ error: "name and role are required" }, { status: 400 });
-  }
+  const parsed = validate(ContactSchema, body.data);
+  if (!parsed.ok) return parsed.response;
+
+  const { name, role, street, houseNumber, postalCode, city } = parsed.data;
 
   try {
     const updated = await prisma.contact.update({
       where: { id },
       data: {
         name:        name.trim(),
-        role:        role as "MANAGER" | "ACCOUNTANT",
+        role,
         street:      street      ?? null,
         houseNumber: houseNumber ?? null,
         postalCode:  postalCode  ?? null,

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { parseBody, validate } from "@/lib/api";
 import { CreatePropertySchema } from "@/lib/validations/property";
 
 async function generateNumber(type: "WEG" | "MV"): Promise<string> {
@@ -25,22 +26,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const body = await parseBody(request);
+  if (!body.ok) return body.response;
 
-  const result = CreatePropertySchema.safeParse(body);
-  if (!result.success) {
-    return Response.json(
-      { error: "Validation failed", fields: result.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+  const parsed = validate(CreatePropertySchema, body.data);
+  if (!parsed.ok) return parsed.response;
 
-  const data = result.data;
+  const data = parsed.data;
   const number = data.number?.trim() || (await generateNumber(data.type));
 
   // Derive address from first building if not provided

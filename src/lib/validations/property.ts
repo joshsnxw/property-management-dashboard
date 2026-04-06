@@ -34,3 +34,38 @@ export const CreatePropertySchema = z.object({
 });
 
 export type CreatePropertyInput = z.infer<typeof CreatePropertySchema>;
+
+export const PatchPropertySchema = z.object({
+  name:        z.string().min(1).optional(),
+  address:     z.string().min(1).optional(),
+  number:      z.string().min(1).optional(),
+  type:        z.enum(["WEG", "MV"]).optional(),
+  status:      z.enum(["ACTIVE", "PENDING", "ARCHIVED"]).optional(),
+  managerId:   z.string().min(1).optional(),
+  accountantId:z.string().min(1).optional(),
+});
+
+// Used when creating a unit under an existing property (buildingId instead of buildingIndex)
+export const CreateUnitForBuildingSchema = z.object({
+  number:          z.string().default(""),
+  type:            z.enum(["APARTMENT", "OFFICE", "GARDEN", "PARKING"]),
+  floor:           z.string().optional(),
+  entrance:        z.string().optional(),
+  sizeSqm:         z.number().positive().optional(),
+  coOwnershipShare:z.string().optional(),
+  yearBuilt:       z.number().int().optional(),
+  rooms:           z.number().positive().optional(),
+  buildingId:      z.string().min(1),
+});
+
+export const PatchUnitSchema = z.object({
+  number:          z.string().min(1).optional(),
+  type:            z.enum(["APARTMENT", "OFFICE", "GARDEN", "PARKING"]).optional(),
+  floor:           z.string().optional(),
+  entrance:        z.string().optional(),
+  sizeSqm:         z.number().positive().optional(),
+  coOwnershipShare:z.string().optional(),
+  yearBuilt:       z.number().int().optional(),
+  rooms:           z.number().positive().optional(),
+  buildingId:      z.string().optional(),
+});

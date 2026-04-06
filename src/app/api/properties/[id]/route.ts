@@ -1,15 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
-
-const PatchPropertySchema = z.object({
-  name:        z.string().min(1).optional(),
-  address:     z.string().min(1).optional(),
-  number:      z.string().min(1).optional(),
-  type:        z.enum(["WEG", "MV"]).optional(),
-  status:      z.enum(["ACTIVE", "PENDING", "ARCHIVED"]).optional(),
-  managerId:   z.string().min(1).optional(),
-  accountantId:z.string().min(1).optional(),
-});
+import { parseBody, validate } from "@/lib/api";
+import { PatchPropertySchema } from "@/lib/validations/property";
 
 export async function GET(
   _req: Request,
@@ -34,21 +25,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  let body: unknown;
-  try { body = await request.json(); } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-  const result = PatchPropertySchema.safeParse(body);
-  if (!result.success) {
-    return Response.json(
-      { error: "Validation failed", fields: result.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+
+  const body = await parseBody(request);
+  if (!body.ok) return body.response;
+
+  const parsed = validate(PatchPropertySchema, body.data);
+  if (!parsed.ok) return parsed.response;
+
   try {
     const property = await prisma.property.update({
       where: { id },
-      data: result.data,
+      data: parsed.data,
       include: { manager: true, accountant: true },
     });
     return Response.json(property);

@@ -1,4 +1,5 @@
 import { Mistral } from "@mistralai/mistralai";
+import { parseBody } from "@/lib/api";
 
 const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY! });
 
@@ -58,12 +59,10 @@ const PROPERTY_SCHEMA = {
 };
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try { body = await request.json(); } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const body = await parseBody(request);
+  if (!body.ok) return body.response;
 
-  const { documentUrl } = body as { documentUrl?: string };
+  const { documentUrl } = body.data as { documentUrl?: string };
   if (!documentUrl) {
     return Response.json({ error: "documentUrl is required" }, { status: 400 });
   }

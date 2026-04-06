@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { parseBody, validate } from "@/lib/api";
 import { BuildingSchema } from "@/lib/validations/property";
 
 export async function POST(
@@ -6,19 +7,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  let body: unknown;
-  try { body = await request.json(); } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-  const result = BuildingSchema.safeParse(body);
-  if (!result.success) {
-    return Response.json(
-      { error: "Validation failed", fields: result.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+
+  const body = await parseBody(request);
+  if (!body.ok) return body.response;
+
+  const parsed = validate(BuildingSchema, body.data);
+  if (!parsed.ok) return parsed.response;
+
   const building = await prisma.building.create({
-    data: { ...result.data, propertyId: id },
+    data: { ...parsed.data, propertyId: id },
     include: { units: true },
   });
   return Response.json(building, { status: 201 });
