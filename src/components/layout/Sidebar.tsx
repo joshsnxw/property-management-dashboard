@@ -124,9 +124,10 @@ function BuildingIcon({ active }: { active: boolean }) {
 function ContactsIcon({ active }: { active: boolean }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className={active ? "text-accent" : "text-tertiary"}>
-      <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M1 13c0-2.761 2.239-4 5-4s5 1.239 5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <path d="M12 7.5h3M13.5 6v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="5.5" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1 13c0-2.485 2.015-3.5 4.5-3.5S10 10.515 10 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="11" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M10.5 9.6c.16-.063.327-.1.5-.1 2.485 0 4.5 1.015 4.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   );
 }

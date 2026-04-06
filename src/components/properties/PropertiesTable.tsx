@@ -170,14 +170,14 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
       <div className="border border-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed min-w-[780px]">
           <colgroup>
-            <col />
-            <col className="w-28" />
+            <col className="w-[28%]" />
+            <col className="w-24" />
             <col className="w-16" />
-            <col className="w-24" />
+            <col className="w-20" />
             <col className="w-14" />
-            <col className="w-32" />
-            <col className="w-32" />
-            <col className="w-24" />
+            <col className="w-[15%]" />
+            <col className="w-[15%]" />
+            <col className="w-20" />
           </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface Contact {
   id:          string;
@@ -47,11 +48,13 @@ export function ContactsTable({ contacts: initial }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Modal state
-  const [modalOpen, setModalOpen]     = useState(false);
-  const [editing, setEditing]         = useState<Contact | null>(null);
-  const [form, setForm]               = useState(emptyForm);
-  const [saving, setSaving]           = useState(false);
-  const [showErrors, setShowErrors]   = useState(false);
+  const [modalOpen, setModalOpen]       = useState(false);
+  const [editing, setEditing]           = useState<Contact | null>(null);
+  const [form, setForm]                 = useState(emptyForm);
+  const [saving, setSaving]             = useState(false);
+  const [showErrors, setShowErrors]     = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting]           = useState(false);
 
   const cities = useMemo(
     () => Array.from(new Set(contacts.map((c) => c.city).filter(Boolean))) as string[],
@@ -145,6 +148,22 @@ export function ContactsTable({ contacts: initial }: Props) {
       router.refresh();
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!editing) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/contacts/${editing.id}`, { method: "DELETE" });
+      if (!res.ok) { toast("Failed to delete contact", "error"); return; }
+      setContacts((prev) => prev.filter((c) => c.id !== editing.id));
+      toast("Contact deleted", "success");
+      closeModal();
+      router.refresh();
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
     }
   }
 
@@ -248,7 +267,7 @@ export function ContactsTable({ contacts: initial }: Props) {
                 <tr key={c.id} className="border-b border-border last:border-0 hover:bg-bg-1 transition-colors group">
                   <td className="px-3 py-3 font-medium text-primary">{c.name}</td>
                   <td className="px-3 py-3">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium border ${ROLE_CLASS[c.role]}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-sm text-xs font-medium border ${ROLE_CLASS[c.role]}`}>
                       {ROLE_LABEL[c.role]}
                     </span>
                   </td>
@@ -291,7 +310,7 @@ export function ContactsTable({ contacts: initial }: Props) {
                   className={inputClass(!form.name.trim())}
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Alice Müller"
+                  placeholder="Full name"
                 />
               </div>
               <div className="col-span-2">
@@ -317,7 +336,7 @@ export function ContactsTable({ contacts: initial }: Props) {
                     className={`${inputBase} border-border focus:border-accent`}
                     value={form.street}
                     onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))}
-                    placeholder="Kantstraße"
+                    placeholder="Street"
                   />
                 </div>
                 <div>
@@ -327,7 +346,7 @@ export function ContactsTable({ contacts: initial }: Props) {
                     className={`${inputBase} border-border focus:border-accent`}
                     value={form.houseNumber}
                     onChange={(e) => setForm((f) => ({ ...f, houseNumber: e.target.value }))}
-                    placeholder="45"
+                    placeholder="No."
                   />
                 </div>
               </div>
@@ -339,7 +358,7 @@ export function ContactsTable({ contacts: initial }: Props) {
                     className={`${inputBase} border-border focus:border-accent`}
                     value={form.postalCode}
                     onChange={(e) => setForm((f) => ({ ...f, postalCode: e.target.value }))}
-                    placeholder="10625"
+                    placeholder="Postal code"
                   />
                 </div>
                 <div>
@@ -349,11 +368,20 @@ export function ContactsTable({ contacts: initial }: Props) {
                     className={`${inputBase} border-border focus:border-accent`}
                     value={form.city}
                     onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                    placeholder="Berlin"
+                    placeholder="City"
                   />
                 </div>
               </div>
             </div>
+
+            {editing && (
+              <div className="pt-3 border-t border-red/20">
+                <p className="text-xs text-tertiary mb-2">Danger zone</p>
+                <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} disabled={deleting}>
+                  Delete contact
+                </Button>
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-1">
               <button
@@ -375,6 +403,15 @@ export function ContactsTable({ contacts: initial }: Props) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete contact?"
+        message={`This will permanently delete "${editing?.name}". This cannot be undone.`}
+        confirmLabel={deleting ? "Deleting…" : "Delete contact"}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }
