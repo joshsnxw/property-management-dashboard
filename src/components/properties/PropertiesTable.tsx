@@ -32,6 +32,9 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
   const [managerFilter, setManagerFilter]     = useState("ALL");
   const [accountantFilter, setAccountantFilter] = useState("ALL");
   const [statusFilter, setStatusFilter]         = useState("ALL");
+  const [filtersOpen, setFiltersOpen]           = useState(false);
+
+  const activeFilterCount = (typeFilter !== "ALL" ? 1 : 0) + (managerFilter !== "ALL" ? 1 : 0) + (accountantFilter !== "ALL" ? 1 : 0) + (statusFilter !== "ALL" ? 1 : 0);
 
   const managers = useMemo(
     () => Array.from(new Set(properties.map((p) => p.manager?.name).filter(Boolean))) as string[],
@@ -76,58 +79,91 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
         <KpiCard label="Total units" value={kpis.totalUnits} />
       </div>
 
-      {/* Filters + New property */}
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="text"
-          placeholder="Search properties…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent w-52"
-          suppressHydrationWarning
-        />
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as "ALL" | "WEG" | "MV")}
-          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
-        >
-          <option value="ALL">All types</option>
-          <option value="WEG">WEG</option>
-          <option value="MV">MV</option>
-        </select>
-        <select
-          value={managerFilter}
-          onChange={(e) => setManagerFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
-        >
-          <option value="ALL">All managers</option>
-          {managers.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
-        <select
-          value={accountantFilter}
-          onChange={(e) => setAccountantFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
-        >
-          <option value="ALL">All accountants</option>
-          {accountants.map((a) => (
-            <option key={a} value={a}>{a}</option>
-          ))}
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
-        >
-          <option value="ALL">All statuses</option>
-          <option value="ACTIVE">Active</option>
-          <option value="PENDING">Pending</option>
-          <option value="ARCHIVED">Archived</option>
-        </select>
-        <Link href="/properties/new" className="ml-auto">
-          <Button size="sm">+ New property</Button>
-        </Link>
+      {/* Search + filter toggle + new property */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search properties…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent"
+            suppressHydrationWarning
+          />
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((o) => !o)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
+              filtersOpen || activeFilterCount > 0
+                ? "border-accent bg-accent-dim text-accent"
+                : "border-border bg-bg-0 text-secondary hover:text-primary"
+            }`}
+          >
+            <FilterIcon />
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[10px] font-medium">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          <Link href="/properties/new">
+            <Button size="sm">+ New property</Button>
+          </Link>
+        </div>
+
+        {filtersOpen && (
+          <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-bg-1 px-3 py-2.5">
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as "ALL" | "WEG" | "MV")}
+              className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
+            >
+              <option value="ALL">All types</option>
+              <option value="WEG">WEG</option>
+              <option value="MV">MV</option>
+            </select>
+            <select
+              value={managerFilter}
+              onChange={(e) => setManagerFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
+            >
+              <option value="ALL">All managers</option>
+              {managers.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <select
+              value={accountantFilter}
+              onChange={(e) => setAccountantFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
+            >
+              <option value="ALL">All accountants</option>
+              {accountants.map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary focus:outline-none focus:border-accent"
+            >
+              <option value="ALL">All statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="PENDING">Pending</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={() => { setTypeFilter("ALL"); setManagerFilter("ALL"); setAccountantFilter("ALL"); setStatusFilter("ALL"); }}
+                className="text-xs text-tertiary hover:text-primary transition-colors ml-auto"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Table — horizontally scrollable on narrow screens */}
@@ -194,5 +230,13 @@ export function PropertiesTable({ properties }: PropertiesTableProps) {
         </table>
       </div>
     </div>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   );
 }
