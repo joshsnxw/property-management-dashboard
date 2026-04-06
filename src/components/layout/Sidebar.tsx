@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const navItems = [
-  { label: "Properties", href: "/properties", icon: BuildingIcon },
-  { label: "Contacts",   href: "/contacts",   icon: ContactsIcon },
+  { label: "Workspace",  href: "/workspace",  icon: WorkspaceIcon,  beta: true  },
+  { label: "Properties", href: "/properties", icon: BuildingIcon,   beta: false },
+  { label: "Contacts",   href: "/contacts",   icon: ContactsIcon,   beta: false },
 ];
 
 export function Sidebar() {
@@ -74,7 +75,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 flex flex-col gap-0.5">
-        {navItems.map(({ label, href, icon: Icon }) => {
+        {navItems.map(({ label, href, icon: Icon, beta }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
@@ -90,7 +91,16 @@ export function Sidebar() {
               }`}
             >
               <Icon active={active} />
-              {!isCollapsed && label}
+              {!isCollapsed && (
+                <>
+                  <span className="flex-1">{label}</span>
+                  {beta && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-sm bg-yellow/10 text-yellow border border-yellow/20 leading-none">
+                      Beta
+                    </span>
+                  )}
+                </>
+              )}
             </Link>
           );
         })}
@@ -101,6 +111,17 @@ export function Sidebar() {
         {!isCollapsed && <span className="text-xs text-tertiary">Property Management</span>}
       </div>
     </aside>
+  );
+}
+
+function WorkspaceIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className={active ? "text-accent" : "text-tertiary"}>
+      <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
   );
 }
 
