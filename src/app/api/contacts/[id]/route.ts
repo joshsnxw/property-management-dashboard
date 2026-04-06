@@ -16,8 +16,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     city?: string | null;
   };
 
-  const validRoles = ["MANAGER", "ACCOUNTANT", "TENANT"];
-  if (!name?.trim() || !validRoles.includes(role ?? "")) {
+  if (!name?.trim() || !["MANAGER", "ACCOUNTANT"].includes(role ?? "")) {
     return Response.json({ error: "name and role are required" }, { status: 400 });
   }
 
@@ -26,7 +25,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       where: { id },
       data: {
         name:        name.trim(),
-        role:        role as "MANAGER" | "ACCOUNTANT" | "TENANT",
+        role:        role as "MANAGER" | "ACCOUNTANT",
         street:      street      ?? null,
         houseNumber: houseNumber ?? null,
         postalCode:  postalCode  ?? null,

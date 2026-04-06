@@ -20,20 +20,19 @@ export async function POST(request: Request) {
     city?: string;
   };
 
-  const validRoles = ["MANAGER", "ACCOUNTANT", "TENANT"];
-  if (!name?.trim() || !validRoles.includes(role ?? "")) {
-    return Response.json({ error: "name and role (MANAGER|ACCOUNTANT|TENANT) are required" }, { status: 400 });
+  if (!name?.trim() || !["MANAGER", "ACCOUNTANT"].includes(role ?? "")) {
+    return Response.json({ error: "name and role (MANAGER|ACCOUNTANT) are required" }, { status: 400 });
   }
 
   const existing = await prisma.contact.findFirst({
-    where: { name: { equals: name.trim(), mode: "insensitive" }, role: role as "MANAGER" | "ACCOUNTANT" | "TENANT" },
+    where: { name: { equals: name.trim(), mode: "insensitive" }, role: role as "MANAGER" | "ACCOUNTANT" },
   });
   if (existing) return Response.json(existing);
 
   const created = await prisma.contact.create({
     data: {
       name:        name.trim(),
-      role:        role as "MANAGER" | "ACCOUNTANT" | "TENANT",
+      role:        role as "MANAGER" | "ACCOUNTANT",
       street:      street      || null,
       houseNumber: houseNumber || null,
       postalCode:  postalCode  || null,

@@ -1,1 +1,0 @@
-ALTER TYPE "ContactRole" ADD VALUE 'TENANT';

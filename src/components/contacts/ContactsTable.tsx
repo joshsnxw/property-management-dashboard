@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 interface Contact {
   id:          string;
   name:        string;
-  role:        "MANAGER" | "ACCOUNTANT" | "TENANT";
+  role:        "MANAGER" | "ACCOUNTANT";
   street:      string | null;
   houseNumber: string | null;
   postalCode:  string | null;
@@ -25,13 +25,11 @@ interface Props {
 const ROLE_LABEL: Record<ContactRole, string> = {
   MANAGER:    "Manager",
   ACCOUNTANT: "Accountant",
-  TENANT:     "Tenant",
 };
 
 const ROLE_CLASS: Record<ContactRole, string> = {
   MANAGER:    "bg-blue-50 text-blue-700 border-blue-200",
   ACCOUNTANT: "bg-purple-50 text-purple-700 border-purple-200",
-  TENANT:     "bg-green-50 text-green-700 border-green-200",
 };
 
 const th = "text-left px-3 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide whitespace-nowrap";
@@ -80,7 +78,6 @@ export function ContactsTable({ contacts: initial }: Props) {
     total:      contacts.length,
     managers:   contacts.filter((c) => c.role === "MANAGER").length,
     accountants:contacts.filter((c) => c.role === "ACCOUNTANT").length,
-    tenants:    contacts.filter((c) => c.role === "TENANT").length,
   }), [contacts]);
 
   function openNew() {
@@ -166,7 +163,6 @@ export function ContactsTable({ contacts: initial }: Props) {
         <KpiCard label="Total"       value={kpis.total} />
         <KpiCard label="Managers"    value={kpis.managers} />
         <KpiCard label="Accountants" value={kpis.accountants} />
-        <KpiCard label="Tenants"     value={kpis.tenants} />
       </div>
 
       {/* Search + filter toggle + new contact */}
@@ -206,7 +202,6 @@ export function ContactsTable({ contacts: initial }: Props) {
               <option value="ALL">All roles</option>
               <option value="MANAGER">Manager</option>
               <option value="ACCOUNTANT">Accountant</option>
-              <option value="TENANT">Tenant</option>
             </select>
             <select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className={selectClass}>
               <option value="ALL">All cities</option>
@@ -308,7 +303,6 @@ export function ContactsTable({ contacts: initial }: Props) {
                 >
                   <option value="MANAGER">Manager</option>
                   <option value="ACCOUNTANT">Accountant</option>
-                  <option value="TENANT">Tenant</option>
                 </select>
               </div>
             </div>

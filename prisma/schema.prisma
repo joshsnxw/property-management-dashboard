@@ -97,5 +97,4 @@ enum UnitType {
 enum ContactRole {
   MANAGER
   ACCOUNTANT
-  TENANT
 }
