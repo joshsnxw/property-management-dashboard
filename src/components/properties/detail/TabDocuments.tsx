@@ -7,10 +7,11 @@ import { PrefillDialog, ExtractedProperty } from "@/components/ui/PrefillDialog"
 import { Document, Building } from "./types";
 
 interface Props {
-  propertyId:       string;
-  documents:        Document[];
-  onDocumentAdded:  (doc: Document) => void;
-  onPrefillApplied: (buildings: Building[]) => void;
+  propertyId:         string;
+  documents:          Document[];
+  onDocumentAdded:    (doc: Document) => void;
+  onDocumentRemoved:  (id: string) => void;
+  onPrefillApplied:   (buildings: Building[]) => void;
 }
 
 function formatBytes(bytes: number | null): string {
@@ -20,11 +21,26 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function TabDocuments({ propertyId, documents, onDocumentAdded, onPrefillApplied }: Props) {
+export function TabDocuments({ propertyId, documents, onDocumentAdded, onDocumentRemoved, onPrefillApplied }: Props) {
   const { toast } = useToast();
   const [uploading, setUploading]     = useState(false);
   const [extracted, setExtracted]     = useState<ExtractedProperty | null>(null);
   const [applying, setApplying]       = useState(false);
+  const [deletingId, setDeletingId]   = useState<string | null>(null);
+
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      if (!res.ok) { toast("Failed to delete document", "error"); return; }
+      onDocumentRemoved(id);
+      toast("Document deleted", "success");
+    } catch {
+      toast("Network error", "error");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   async function handleFiles(files: FileList) {
     const file = files[0];
@@ -49,7 +65,7 @@ export function TabDocuments({ propertyId, documents, onDocumentAdded, onPrefill
       onDocumentAdded(await docRes.json());
       toast("Document uploaded", "success");
 
-      // 3. If PDF, attempt Teilungserklärung extraction
+      // 3. If PDF, attempt declaration of division extraction
       if (file.type === "application/pdf") {
         toast("Analysing document…", "info");
         const parseRes = await fetch("/api/parse-teilungserklaerung", {
@@ -144,6 +160,7 @@ export function TabDocuments({ propertyId, documents, onDocumentAdded, onPrefill
                 <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Name</th>
                 <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Size</th>
                 <th className="text-left px-4 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide">Uploaded</th>
+                  <th className="px-4 py-2.5"></th>
                 <th className="px-4 py-2.5"></th>
               </tr>
             </thead>
@@ -157,13 +174,21 @@ export function TabDocuments({ propertyId, documents, onDocumentAdded, onPrefill
                   </td>
                   <td className="px-4 py-3">
                     <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/api/documents/download?url=${encodeURIComponent(doc.url)}`}
                       className="text-xs text-accent hover:underline"
                     >
                       Download
                     </a>
+                  </td>
+                  <td className="px-2 py-3 w-8">
+                    <button
+                      onClick={() => handleDelete(doc.id)}
+                      disabled={deletingId === doc.id}
+                      className="text-tertiary hover:text-red transition-colors disabled:opacity-40"
+                      aria-label="Delete document"
+                    >
+                      ×
+                    </button>
                   </td>
                 </tr>
               ))}

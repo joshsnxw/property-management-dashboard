@@ -62,6 +62,7 @@ export function PropertyDetailView({ initial }: Props) {
               propertyId={property.id}
               documents={property.documents}
               onDocumentAdded={(doc) => setProperty((p) => ({ ...p, documents: [doc, ...p.documents] }))}
+              onDocumentRemoved={(id) => setProperty((p) => ({ ...p, documents: p.documents.filter((d) => d.id !== id) }))}
               onPrefillApplied={(newBuildings) => updateBuildings([...property.buildings, ...newBuildings])}
             />
           )}
