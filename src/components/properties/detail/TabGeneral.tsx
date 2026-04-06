@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useEditDraft } from "@/hooks/useEditDraft";
+import { apiFetch } from "@/lib/client";
 import { PropertyDetail, Contact } from "./types";
 
 interface Props {
@@ -36,14 +38,16 @@ function toDraft(p: PropertyDetail): Draft {
 }
 
 export function TabGeneral({ property, onUpdate }: Props) {
-  const { toast }  = useToast();
-  const router     = useRouter();
-  const [editing, setEditing]         = useState(false);
-  const [draft, setDraft]             = useState<Draft>(toDraft(property));
-  const [saving, setSaving]           = useState(false);
-  const [deleting, setDeleting]       = useState(false);
+  const { toast } = useToast();
+  const router    = useRouter();
+
+  const { draft, patch, isDirty, editing, startEdit, cancelEdit } =
+    useEditDraft(property, toDraft);
+
+  const [saving, setSaving]               = useState(false);
+  const [deleting, setDeleting]           = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [contacts, setContacts]       = useState<Contact[]>([]);
+  const [contacts, setContacts]           = useState<Contact[]>([]);
 
   useEffect(() => {
     fetch("/api/contacts").then((r) => r.json()).then(setContacts).catch(() => {});
@@ -52,56 +56,33 @@ export function TabGeneral({ property, onUpdate }: Props) {
   const managers    = contacts.filter((c) => c.role === "MANAGER");
   const accountants = contacts.filter((c) => c.role === "ACCOUNTANT");
 
-  const isDirty = JSON.stringify(draft) !== JSON.stringify(toDraft(property));
-
-  function startEdit() {
-    setDraft(toDraft(property));
-    setEditing(true);
-  }
-
-  function cancelEdit() {
-    setDraft(toDraft(property));
-    setEditing(false);
-  }
-
   async function save() {
     setSaving(true);
-    try {
-      const res = await fetch(`/api/properties/${property.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast(data.error ?? "Failed to save", "error");
-        return;
-      }
-      const updated = await res.json();
-      onUpdate({ ...property, ...updated });
-      setEditing(false);
-      toast("Changes saved", "success");
-    } finally {
-      setSaving(false);
-    }
+    const updated = await apiFetch<PropertyDetail>(
+      `/api/properties/${property.id}`,
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) },
+      toast,
+      "Failed to save",
+    );
+    setSaving(false);
+    if (!updated) return;
+    onUpdate({ ...property, ...updated });
+    cancelEdit();
+    toast("Changes saved", "success");
   }
 
   async function deleteProperty() {
     setDeleting(true);
-    try {
-      const res = await fetch(`/api/properties/${property.id}`, { method: "DELETE" });
-      if (!res.ok) { toast("Failed to delete property", "error"); return; }
-      router.push("/properties");
-    } catch {
-      toast("Network error — could not delete property", "error");
-    } finally {
-      setDeleting(false);
-      setConfirmDelete(false);
-    }
-  }
-
-  function set(patch: Partial<Draft>) {
-    setDraft((d) => ({ ...d, ...patch }));
+    const result = await apiFetch(
+      `/api/properties/${property.id}`,
+      { method: "DELETE" },
+      toast,
+      "Failed to delete property",
+    );
+    setDeleting(false);
+    setConfirmDelete(false);
+    if (result === null) return;
+    router.push("/properties");
   }
 
   const inputClass =
@@ -136,7 +117,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
         <div className="col-span-2 flex flex-col gap-1">
           <span className={labelClass}>Name</span>
           {editing
-            ? <input className={inputClass} value={draft.name} onChange={(e) => set({ name: e.target.value })} />
+            ? <input className={inputClass} value={draft.name} onChange={(e) => patch({ name: e.target.value })} />
             : <span className={valueClass}>{property.name}</span>}
         </div>
 
@@ -144,7 +125,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
         <div className="col-span-2 flex flex-col gap-1">
           <span className={labelClass}>Address</span>
           {editing
-            ? <input className={inputClass} value={draft.address} onChange={(e) => set({ address: e.target.value })} />
+            ? <input className={inputClass} value={draft.address} onChange={(e) => patch({ address: e.target.value })} />
             : <span className={valueClass}>{property.address}</span>}
         </div>
 
@@ -152,7 +133,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
         <div className="flex flex-col gap-1">
           <span className={labelClass}>Number</span>
           {editing
-            ? <input className={inputClass} value={draft.number} onChange={(e) => set({ number: e.target.value })} />
+            ? <input className={inputClass} value={draft.number} onChange={(e) => patch({ number: e.target.value })} />
             : <span className="font-mono text-sm text-primary">{property.number}</span>}
         </div>
 
@@ -160,7 +141,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
         <div className="flex flex-col gap-1">
           <span className={labelClass}>Type</span>
           {editing ? (
-            <select className={inputClass} value={draft.type} onChange={(e) => set({ type: e.target.value as Draft["type"] })}>
+            <select className={inputClass} value={draft.type} onChange={(e) => patch({ type: e.target.value as Draft["type"] })}>
               <option value="WEG">WEG</option>
               <option value="MV">MV</option>
             </select>
@@ -173,7 +154,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
         <div className="flex flex-col gap-1">
           <span className={labelClass}>Accountant</span>
           {editing ? (
-            <select className={inputClass} value={draft.accountantId} onChange={(e) => set({ accountantId: e.target.value })}>
+            <select className={inputClass} value={draft.accountantId} onChange={(e) => patch({ accountantId: e.target.value })}>
               {accountants.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           ) : (
@@ -185,7 +166,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
         <div className="flex flex-col gap-1">
           <span className={labelClass}>Manager</span>
           {editing ? (
-            <select className={inputClass} value={draft.managerId} onChange={(e) => set({ managerId: e.target.value })}>
+            <select className={inputClass} value={draft.managerId} onChange={(e) => patch({ managerId: e.target.value })}>
               {managers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
           ) : (
@@ -197,7 +178,7 @@ export function TabGeneral({ property, onUpdate }: Props) {
         <div className="flex flex-col gap-1">
           <span className={labelClass}>Status</span>
           {editing ? (
-            <select className={inputClass} value={draft.status} onChange={(e) => set({ status: e.target.value as Draft["status"] })}>
+            <select className={inputClass} value={draft.status} onChange={(e) => patch({ status: e.target.value as Draft["status"] })}>
               <option value="ACTIVE">Active</option>
               <option value="PENDING">Pending</option>
               <option value="ARCHIVED">Archived</option>

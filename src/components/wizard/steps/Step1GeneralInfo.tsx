@@ -5,6 +5,7 @@ import { UploadZone } from "@/components/ui/UploadZone";
 import { useToast } from "@/components/ui/Toast";
 import { ExtractedProperty } from "@/components/ui/PrefillDialog";
 import { FormField, fieldInputClass } from "@/components/ui/FormField";
+import { apiFetch } from "@/lib/client";
 
 export interface Step1Data {
   type: "WEG" | "MV" | null;
@@ -50,31 +51,27 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
       return;
     }
     setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
-      if (!uploadRes.ok) { toast("Upload failed", "error"); return; }
-      const { url, name: uploadedName, sizeBytes } = await uploadRes.json();
-      onDocumentUploaded?.({ url, name: uploadedName, sizeBytes });
 
-      toast("Analysing document…", "info");
-      const parseRes = await fetch("/api/parse-teilungserklaerung", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentUrl: url }),
-      });
-      if (!parseRes.ok) { toast("Could not extract data from document", "error"); return; }
-      const extracted = await parseRes.json();
-      if (extracted.buildings?.length) {
-        onParsed?.(extracted);
-      } else {
-        toast("No property data found in document", "info");
-      }
-    } catch {
-      toast("Network error", "error");
-    } finally {
-      setUploading(false);
+    const formData = new FormData();
+    formData.append("file", file);
+    const upload = await apiFetch<UploadedDoc>(
+      "/api/upload", { method: "POST", body: formData }, toast, "Upload failed",
+    );
+    if (!upload) { setUploading(false); return; }
+    onDocumentUploaded?.(upload);
+
+    toast("Analysing document…", "info");
+    const extracted = await apiFetch<ExtractedProperty>(
+      "/api/parse-teilungserklaerung",
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentUrl: upload.url }) },
+      toast, "Could not extract data from document",
+    );
+    setUploading(false);
+    if (!extracted) return;
+    if (extracted.buildings?.length) {
+      onParsed?.(extracted);
+    } else {
+      toast("No property data found in document", "info");
     }
   }
 
@@ -82,19 +79,15 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
     const file = files[0];
     if (!file) return;
     setUploadingDoc(true);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
-      if (!uploadRes.ok) { toast("Upload failed", "error"); return; }
-      const { url, name: uploadedName, sizeBytes } = await uploadRes.json();
-      onDocumentUploaded?.({ url, name: uploadedName, sizeBytes });
-      toast("Document added", "success");
-    } catch {
-      toast("Network error", "error");
-    } finally {
-      setUploadingDoc(false);
-    }
+    const formData = new FormData();
+    formData.append("file", file);
+    const upload = await apiFetch<UploadedDoc>(
+      "/api/upload", { method: "POST", body: formData }, toast, "Upload failed",
+    );
+    setUploadingDoc(false);
+    if (!upload) return;
+    onDocumentUploaded?.(upload);
+    toast("Document added", "success");
   }
 
   const managers    = contacts.filter((c) => c.role === "MANAGER");

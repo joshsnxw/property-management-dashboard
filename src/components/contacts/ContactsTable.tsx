@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, fieldInputClass } from "@/components/ui/FormField";
+import { apiFetch } from "@/lib/client";
 import { TH_CLASS } from "@/lib/utils";
 
 interface Contact {
@@ -113,59 +114,51 @@ export function ContactsTable({ contacts: initial }: Props) {
   async function handleSave() {
     if (!form.name.trim()) { setShowErrors(true); toast("Name is required", "error"); return; }
     setSaving(true);
-    try {
-      const body = {
-        name:        form.name.trim(),
-        role:        form.role,
-        street:      form.street      || null,
-        houseNumber: form.houseNumber || null,
-        postalCode:  form.postalCode  || null,
-        city:        form.city        || null,
-      };
+    const body = {
+      name:        form.name.trim(),
+      role:        form.role,
+      street:      form.street      || null,
+      houseNumber: form.houseNumber || null,
+      postalCode:  form.postalCode  || null,
+      city:        form.city        || null,
+    };
+    const json = { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
 
-      if (editing) {
-        const res = await fetch(`/api/contacts/${editing.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) { toast("Failed to update contact", "error"); return; }
-        const updated: Contact = await res.json();
-        setContacts((prev) => prev.map((c) => c.id === updated.id ? updated : c));
-        toast("Contact updated", "success");
-      } else {
-        const res = await fetch("/api/contacts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) { toast("Failed to create contact", "error"); return; }
-        const created: Contact = await res.json();
-        setContacts((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
-        toast("Contact added", "success");
-      }
-
-      closeModal();
-      router.refresh();
-    } finally {
+    if (editing) {
+      const updated = await apiFetch<Contact>(
+        `/api/contacts/${editing.id}`, { method: "PATCH", ...json }, toast, "Failed to update contact",
+      );
       setSaving(false);
+      if (!updated) return;
+      setContacts((prev) => prev.map((c) => c.id === updated.id ? updated : c));
+      toast("Contact updated", "success");
+    } else {
+      const created = await apiFetch<Contact>(
+        "/api/contacts", { method: "POST", ...json }, toast, "Failed to create contact",
+      );
+      setSaving(false);
+      if (!created) return;
+      setContacts((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
+      toast("Contact added", "success");
     }
+
+    closeModal();
+    router.refresh();
   }
 
   async function handleDelete() {
     if (!editing) return;
     setDeleting(true);
-    try {
-      const res = await fetch(`/api/contacts/${editing.id}`, { method: "DELETE" });
-      if (!res.ok) { toast("Failed to delete contact", "error"); return; }
-      setContacts((prev) => prev.filter((c) => c.id !== editing.id));
-      toast("Contact deleted", "success");
-      closeModal();
-      router.refresh();
-    } finally {
-      setDeleting(false);
-      setConfirmDelete(false);
-    }
+    const result = await apiFetch(
+      `/api/contacts/${editing.id}`, { method: "DELETE" }, toast, "Failed to delete contact",
+    );
+    setDeleting(false);
+    setConfirmDelete(false);
+    if (result === null) return;
+    setContacts((prev) => prev.filter((c) => c.id !== editing.id));
+    toast("Contact deleted", "success");
+    closeModal();
+    router.refresh();
   }
 
   const ic = (empty: boolean) => fieldInputClass(showErrors && empty);

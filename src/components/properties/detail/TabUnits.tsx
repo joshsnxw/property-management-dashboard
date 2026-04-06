@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { apiFetch } from "@/lib/client";
 import { Building, Unit } from "./types";
 
 interface Props {
@@ -49,17 +50,12 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
 
   async function saveBuildingId(unit: Unit, newBuildingId: string) {
     if (newBuildingId === unit.buildingId) return;
-    try {
-      const res = await fetch(`/api/units/${unit.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ buildingId: newBuildingId }),
-      });
-      if (!res.ok) { toast("Failed to move unit", "error"); return; }
-      moveUnit(unit.id, unit.buildingId, await res.json());
-    } catch {
-      toast("Network error — could not move unit", "error");
-    }
+    const updated = await apiFetch<Unit>(
+      `/api/units/${unit.id}`,
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ buildingId: newBuildingId }) },
+      toast, "Failed to move unit",
+    );
+    if (updated) moveUnit(unit.id, unit.buildingId, updated);
   }
 
   function removeUnitFromState(id: string) {
@@ -87,45 +83,28 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
       if (value !== null && isNaN(value as number)) return;
     }
 
-    try {
-      const res = await fetch(`/api/units/${unit.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
-      });
-      if (!res.ok) { toast("Failed to save unit", "error"); return; }
-      replaceUnit(await res.json());
-    } catch {
-      toast("Network error — could not save unit", "error");
-    }
+    const updated = await apiFetch<Unit>(
+      `/api/units/${unit.id}`,
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ [field]: value }) },
+      toast, "Failed to save unit",
+    );
+    if (updated) replaceUnit(updated);
   }
 
   async function addUnit() {
     const firstBuilding = buildings[0];
     if (!firstBuilding) return;
-    try {
-      const res = await fetch(`/api/properties/${propertyId}/units`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          number: "", type: "APARTMENT", buildingId: firstBuilding.id,
-        }),
-      });
-      if (!res.ok) { toast("Failed to add unit", "error"); return; }
-      addUnitToBuilding(firstBuilding.id, await res.json());
-    } catch {
-      toast("Network error — could not add unit", "error");
-    }
+    const unit = await apiFetch<Unit>(
+      `/api/properties/${propertyId}/units`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ number: "", type: "APARTMENT", buildingId: firstBuilding.id }) },
+      toast, "Failed to add unit",
+    );
+    if (unit) addUnitToBuilding(firstBuilding.id, unit);
   }
 
   async function deleteUnit(id: string) {
-    try {
-      const res = await fetch(`/api/units/${id}`, { method: "DELETE" });
-      if (!res.ok) { toast("Failed to delete unit", "error"); return; }
-      removeUnitFromState(id);
-    } catch {
-      toast("Network error — could not delete unit", "error");
-    }
+    const result = await apiFetch(`/api/units/${id}`, { method: "DELETE" }, toast, "Failed to delete unit");
+    if (result !== null) removeUnitFromState(id);
   }
 
   const thClass = "text-left px-2 py-2 text-xs font-medium text-tertiary whitespace-nowrap";

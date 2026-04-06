@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { useToast } from "@/components/ui/Toast";
 import { PrefillDialog, ExtractedProperty } from "@/components/ui/PrefillDialog";
+import { apiFetch } from "@/lib/client";
 import { Document, Building } from "./types";
 import { cn, TH_CLASS } from "@/lib/utils";
 
@@ -31,16 +32,11 @@ export function TabDocuments({ propertyId, documents, onDocumentAdded, onDocumen
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    try {
-      const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
-      if (!res.ok) { toast("Failed to delete document", "error"); return; }
-      onDocumentRemoved(id);
-      toast("Document deleted", "success");
-    } catch {
-      toast("Network error", "error");
-    } finally {
-      setDeletingId(null);
-    }
+    const result = await apiFetch(`/api/documents/${id}`, { method: "DELETE" }, toast, "Failed to delete document");
+    setDeletingId(null);
+    if (result === null) return;
+    onDocumentRemoved(id);
+    toast("Document deleted", "success");
   }
 
   async function handleFiles(files: FileList) {
@@ -48,100 +44,89 @@ export function TabDocuments({ propertyId, documents, onDocumentAdded, onDocumen
     if (!file) return;
 
     setUploading(true);
-    try {
-      // 1. Upload to Vercel Blob
-      const form = new FormData();
-      form.append("file", file);
-      const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
-      if (!uploadRes.ok) { toast("Upload failed", "error"); return; }
-      const { url, name, sizeBytes } = await uploadRes.json();
 
-      // 2. Save document record
-      const docRes = await fetch(`/api/properties/${propertyId}/documents`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, url, sizeBytes }),
-      });
-      if (!docRes.ok) { toast("Failed to save document", "error"); return; }
-      onDocumentAdded(await docRes.json());
-      toast("Document uploaded", "success");
+    // 1. Upload to Vercel Blob
+    const formData = new FormData();
+    formData.append("file", file);
+    const upload = await apiFetch<{ url: string; name: string; sizeBytes: number }>(
+      "/api/upload", { method: "POST", body: formData }, toast, "Upload failed",
+    );
+    if (!upload) { setUploading(false); return; }
 
-      // 3. If PDF, attempt declaration of division extraction
-      if (file.type === "application/pdf") {
-        toast("Analysing document…", "info");
-        const parseRes = await fetch("/api/parse-teilungserklaerung", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ documentUrl: url }),
-        });
-        if (parseRes.ok) {
-          const data = await parseRes.json();
-          if (data.buildings?.length) setExtracted(data);
-        }
-      }
-    } catch {
-      toast("Network error", "error");
-    } finally {
-      setUploading(false);
+    // 2. Save document record
+    const doc = await apiFetch<Document>(
+      `/api/properties/${propertyId}/documents`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(upload) },
+      toast, "Failed to save document",
+    );
+    if (!doc) { setUploading(false); return; }
+    onDocumentAdded(doc);
+    toast("Document uploaded", "success");
+
+    // 3. If PDF, attempt declaration of division extraction
+    if (file.type === "application/pdf") {
+      toast("Analysing document…", "info");
+      const parsed = await apiFetch<ExtractedProperty>(
+        "/api/parse-teilungserklaerung",
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentUrl: upload.url }) },
+        toast,
+      );
+      if (parsed?.buildings?.length) setExtracted(parsed);
     }
+
+    setUploading(false);
   }
 
   async function applyPrefill() {
     if (!extracted) return;
     setApplying(true);
-    try {
-      const createdBuildings: Building[] = [];
 
-      for (const b of extracted.buildings) {
-        // Create building
-        const bRes = await fetch(`/api/properties/${propertyId}/buildings`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            label:       b.label,
-            street:      (b as any).street      ?? "",
-            houseNumber: (b as any).houseNumber ?? "",
-            postalCode:  (b as any).postalCode  ?? "",
-            city:        (b as any).city        ?? "",
-            yearBuilt:   (b as any).yearBuilt   ?? null,
-            floors:      (b as any).floors      ?? null,
-          }),
-        });
-        if (!bRes.ok) continue;
-        const building: Building = await bRes.json();
+    const createdBuildings: Building[] = [];
+    const json = { method: "POST", headers: { "Content-Type": "application/json" } } as const;
 
-        // Create units for this building
-        const units: Building["units"] = [];
-        for (const u of (b.units ?? [])) {
-          const uRes = await fetch(`/api/properties/${propertyId}/units`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              buildingId:       building.id,
-              number:           u.number           ?? "",
-              type:             u.type             ?? "APARTMENT",
-              floor:            (u as any).floor            ?? null,
-              entrance:         (u as any).entrance         ?? null,
-              sizeSqm:          (u as any).sizeSqm          ?? null,
-              coOwnershipShare: (u as any).coOwnershipShare ?? null,
-              yearBuilt:        (u as any).yearBuilt        ?? null,
-              rooms:            (u as any).rooms            ?? null,
-            }),
-          });
-          if (uRes.ok) units.push(await uRes.json());
-        }
+    for (const b of extracted.buildings) {
+      const building = await apiFetch<Building>(
+        `/api/properties/${propertyId}/buildings`,
+        { ...json, body: JSON.stringify({
+          label:       b.label,
+          street:      (b as any).street      ?? "",
+          houseNumber: (b as any).houseNumber ?? "",
+          postalCode:  (b as any).postalCode  ?? "",
+          city:        (b as any).city        ?? "",
+          yearBuilt:   (b as any).yearBuilt   ?? null,
+          floors:      (b as any).floors      ?? null,
+        }) },
+        toast,
+      );
+      if (!building) continue;
 
-        createdBuildings.push({ ...building, units });
+      const units: Building["units"] = [];
+      for (const u of (b.units ?? [])) {
+        const unit = await apiFetch<Building["units"][number]>(
+          `/api/properties/${propertyId}/units`,
+          { ...json, body: JSON.stringify({
+            buildingId:       building.id,
+            number:           u.number  ?? "",
+            type:             u.type    ?? "APARTMENT",
+            floor:            (u as any).floor            ?? null,
+            entrance:         (u as any).entrance         ?? null,
+            sizeSqm:          (u as any).sizeSqm          ?? null,
+            coOwnershipShare: (u as any).coOwnershipShare ?? null,
+            yearBuilt:        (u as any).yearBuilt        ?? null,
+            rooms:            (u as any).rooms            ?? null,
+          }) },
+          toast,
+        );
+        if (unit) units.push(unit);
       }
 
-      onPrefillApplied(createdBuildings);
-      toast(`Added ${createdBuildings.length} building(s) from document`, "success");
-      setExtracted(null);
-    } catch {
-      toast("Failed to apply prefill", "error");
-    } finally {
-      setApplying(false);
+      createdBuildings.push({ ...building, units });
     }
+
+    setApplying(false);
+    onPrefillApplied(createdBuildings);
+    toast(`Added ${createdBuildings.length} building(s) from document`, "success");
+    setExtracted(null);
   }
 
   return (
