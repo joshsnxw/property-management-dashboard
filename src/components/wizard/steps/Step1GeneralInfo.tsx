@@ -174,7 +174,7 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
         <input
           autoComplete="off"
           className={inputClass(!data.name.trim())}
-          placeholder="e.g. Wohnanlage Prenzlauer Berg"
+          placeholder="Property name"
           value={data.name}
           onChange={(e) => set({ name: e.target.value })}
         />
@@ -186,7 +186,7 @@ export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts,
         <input
           autoComplete="off"
           className={inputClass(false)}
-          placeholder={`Auto: ${data.type ?? "WEG"}-XXX`}
+          placeholder="Auto-generated if left empty"
           value={data.number}
           onChange={(e) => set({ number: e.target.value })}
         />

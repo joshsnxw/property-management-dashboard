@@ -20,7 +20,7 @@ interface Props {
 }
 
 const emptyBuilding: BuildingData = {
-  label: "", street: "", houseNumber: "", postalCode: "", city: "Berlin",
+  label: "", street: "", houseNumber: "", postalCode: "", city: "",
 };
 
 export function Step2Buildings({ buildings, onChange, errors, showErrors }: Props) {
@@ -72,6 +72,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
             <label className="block text-xs font-medium text-secondary mb-1">Label{req}</label>
             <input
               autoComplete="off"
+              placeholder="Label"
               className={ic(b.label)}
               value={b.label}
               onChange={(e) => update(i, { label: e.target.value })}
@@ -84,6 +85,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
               <label className="block text-xs font-medium text-secondary mb-1">Street{req}</label>
               <input
                 autoComplete="off"
+                placeholder="Street"
                 className={ic(b.street)}
                 value={b.street}
                 onChange={(e) => update(i, { street: e.target.value })}
@@ -93,6 +95,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
               <label className="block text-xs font-medium text-secondary mb-1">No.{req}</label>
               <input
                 autoComplete="off"
+                placeholder="No."
                 className={ic(b.houseNumber)}
                 value={b.houseNumber}
                 onChange={(e) => update(i, { houseNumber: e.target.value })}
@@ -106,6 +109,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
               <label className="block text-xs font-medium text-secondary mb-1">Postal code{req}</label>
               <input
                 autoComplete="off"
+                placeholder="Postal code"
                 className={ic(b.postalCode)}
                 value={b.postalCode}
                 onChange={(e) => update(i, { postalCode: e.target.value })}
@@ -115,6 +119,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
               <label className="block text-xs font-medium text-secondary mb-1">City{req}</label>
               <input
                 autoComplete="off"
+                placeholder="City"
                 className={ic(b.city)}
                 value={b.city}
                 onChange={(e) => update(i, { city: e.target.value })}
@@ -129,6 +134,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
               <input
                 type="number"
                 autoComplete="off"
+                placeholder="Year built"
                 className={`${base} ${ok}`}
                 value={b.yearBuilt ?? ""}
                 onChange={(e) =>
@@ -141,6 +147,7 @@ export function Step2Buildings({ buildings, onChange, errors, showErrors }: Prop
               <input
                 type="number"
                 autoComplete="off"
+                placeholder="Floors"
                 className={`${base} ${ok}`}
                 value={b.floors ?? ""}
                 onChange={(e) =>

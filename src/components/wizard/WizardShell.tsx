@@ -24,7 +24,7 @@ const emptyBuilding: BuildingData = {
   street: "",
   houseNumber: "",
   postalCode: "",
-  city: "Berlin",
+  city: "",
   yearBuilt: undefined,
   floors: undefined,
 };

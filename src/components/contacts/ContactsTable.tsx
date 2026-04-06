@@ -29,8 +29,8 @@ const ROLE_LABEL: Record<ContactRole, string> = {
 };
 
 const ROLE_CLASS: Record<ContactRole, string> = {
-  MANAGER:    "bg-blue-50 text-blue-700 border-blue-200",
-  ACCOUNTANT: "bg-purple-50 text-purple-700 border-purple-200",
+  MANAGER:    "bg-accent-dim text-accent border-accent-border",
+  ACCOUNTANT: "bg-green-dim text-green border-green/20",
 };
 
 const th = "text-left px-3 py-2.5 text-xs font-medium text-tertiary uppercase tracking-wide whitespace-nowrap";
