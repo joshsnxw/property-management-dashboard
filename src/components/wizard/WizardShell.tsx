@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { Step1GeneralInfo, Step1Data } from "./steps/Step1GeneralInfo";
+import { Step1GeneralInfo, Step1Data, UploadedDoc } from "./steps/Step1GeneralInfo";
 import { Step2Buildings, BuildingData } from "./steps/Step2Buildings";
 import { Step3Units, UnitRow } from "./steps/Step3Units";
 import { PrefillDialog, ExtractedProperty } from "@/components/ui/PrefillDialog";
@@ -40,6 +40,7 @@ export function WizardShell() {
   const [saving, setSaving]           = useState(false);
   const [errors, setErrors]           = useState<Record<string, string>>({});
   const [pendingPrefill, setPendingPrefill] = useState<ExtractedProperty | null>(null);
+  const [uploadedDocs, setUploadedDocs]     = useState<UploadedDoc[]>([]);
 
   function applyPrefill(extracted: ExtractedProperty) {
     if (extracted.name) setStep1((prev) => ({ ...prev, name: extracted.name! }));
@@ -152,6 +153,16 @@ export function WizardShell() {
         return;
       }
 
+      const created = await res.json();
+
+      for (const doc of uploadedDocs) {
+        await fetch(`/api/properties/${created.id}/documents`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(doc),
+        });
+      }
+
       toast("Property created successfully", "success");
       router.push("/properties");
     } finally {
@@ -191,7 +202,7 @@ export function WizardShell() {
       {/* Step content */}
       <div className={`bg-bg-0 border border-border rounded-lg ${step === 2 ? "p-4" : "p-6"}`}>
         {step === 0 && (
-          <Step1GeneralInfo data={step1} onChange={setStep1} errors={errors} onParsed={setPendingPrefill} />
+          <Step1GeneralInfo data={step1} onChange={setStep1} errors={errors} onParsed={setPendingPrefill} onDocumentUploaded={(doc) => setUploadedDocs((prev) => [...prev, doc])} />
         )}
         {step === 1 && (
           <Step2Buildings
