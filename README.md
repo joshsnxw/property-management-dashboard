@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Buena
 
-## Getting Started
+Property management dashboard for German residential portfolios. Manages WEG (Wohnungseigentümergemeinschaft) and MV (Mietverwaltung) properties with their buildings, units, contacts, and documents.
 
-First, run the development server:
+## Features
+
+- **Properties** — create and manage WEG/MV properties with status tracking (active, pending, archived)
+- **Buildings & units** — hierarchical structure: property → buildings → units with inline editing
+- **Contacts** — shared manager and accountant directory referenced across properties
+- **Documents** — upload documents per property via Vercel Blob
+- **AI extraction** — upload a *Teilungserklärung* PDF to auto-populate buildings and units via Mistral OCR
+- **Creation wizard** — multi-step form for new properties, with optional PDF-driven prefill
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19, Tailwind CSS v4, shadcn/ui |
+| Database | PostgreSQL (Neon) via Prisma 7 |
+| File storage | Vercel Blob |
+| AI | Mistral OCR (`mistral-ocr-latest`) |
+| Validation | Zod v4 |
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.example` to `.env` and fill in:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+DATABASE_URL=        # Neon (or any Postgres) connection string
+BLOB_READ_WRITE_TOKEN= # Vercel Blob token
+MISTRAL_API_KEY=     # Mistral API key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Apply migrations and start dev server
+npm run build   # runs prisma migrate deploy + prisma generate first
+npm run dev
+```
 
-## Learn More
+Seed the database with sample data:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run db:seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/
+    (app)/          # Authenticated pages: /workspace, /properties, /contacts
+    api/            # REST API routes
+  components/
+    ui/             # Shared primitives (Button, Modal, FormField, Toast, …)
+    layout/         # AppShell, Sidebar, Topbar
+    properties/     # PropertiesTable, detail tabs (General, Buildings, Units, Documents)
+    contacts/       # ContactsTable
+    wizard/         # Multi-step property creation wizard
+  hooks/            # useEditDraft
+  lib/              # prisma, api helpers, client fetch utility, Zod schemas
+```
