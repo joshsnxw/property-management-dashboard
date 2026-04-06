@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { Step1GeneralInfo, Step1Data, UploadedDoc } from "./steps/Step1GeneralInfo";
+import { Step1GeneralInfo, Step1Data, UploadedDoc, Contact } from "./steps/Step1GeneralInfo";
 import { Step2Buildings, BuildingData } from "./steps/Step2Buildings";
 import { Step3Units, UnitRow } from "./steps/Step3Units";
 import { PrefillDialog, ExtractedProperty } from "@/components/ui/PrefillDialog";
@@ -39,10 +39,17 @@ export function WizardShell() {
   const [units, setUnits]         = useState<UnitRow[]>([]);
   const [saving, setSaving]           = useState(false);
   const [errors, setErrors]           = useState<Record<string, string>>({});
+  const [showErrors, setShowErrors]   = useState(false);
   const [pendingPrefill, setPendingPrefill] = useState<ExtractedProperty | null>(null);
   const [uploadedDocs, setUploadedDocs]     = useState<UploadedDoc[]>([]);
+  const [contacts, setContacts]             = useState<Contact[]>([]);
+  const [applying, setApplying]             = useState(false);
 
-  function applyPrefill(extracted: ExtractedProperty) {
+  useEffect(() => {
+    fetch("/api/contacts").then((r) => r.json()).then(setContacts).catch(() => {});
+  }, []);
+
+  async function applyPrefill(extracted: ExtractedProperty) {
     if (extracted.name) setStep1((prev) => ({ ...prev, name: extracted.name! }));
     if (extracted.type === "WEG" || extracted.type === "MV") {
       setStep1((prev) => ({ ...prev, type: extracted.type as "WEG" | "MV" }));
@@ -73,6 +80,36 @@ export function WizardShell() {
         )
       );
     }
+
+    // Resolve manager and accountant contacts (match existing or create new)
+    for (const [nameKey, role, idKey, prefix] of [
+      ["managerName",    "MANAGER",    "managerId",    "manager"]    as const,
+      ["accountantName", "ACCOUNTANT", "accountantId", "accountant"] as const,
+    ]) {
+      const name = (extracted as any)[nameKey] as string | undefined;
+      if (!name) continue;
+      try {
+        const res = await fetch("/api/contacts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            role,
+            street:      (extracted as any)[`${prefix}Street`]      ?? null,
+            houseNumber: (extracted as any)[`${prefix}HouseNumber`] ?? null,
+            postalCode:  (extracted as any)[`${prefix}PostalCode`]  ?? null,
+            city:        (extracted as any)[`${prefix}City`]        ?? null,
+          }),
+        });
+        if (!res.ok) continue;
+        const contact: Contact = await res.json();
+        setContacts((prev) => prev.some((c) => c.id === contact.id) ? prev : [...prev, contact]);
+        setStep1((prev) => ({ ...prev, [idKey]: contact.id }));
+      } catch {
+        // Non-fatal: dropdown stays unset
+      }
+    }
+
     setPendingPrefill(null);
     toast("Fields prefilled from document", "success");
   }
@@ -94,15 +131,16 @@ export function WizardShell() {
       if (!b.street.trim())      e[`b${i}_street`]      = "Required";
       if (!b.houseNumber.trim()) e[`b${i}_houseNumber`] = "Required";
       if (!b.postalCode.trim())  e[`b${i}_postalCode`]  = "Required";
+      if (!b.city.trim())        e[`b${i}_city`]        = "Required";
     });
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   function handleContinue() {
-    if (step === 0 && !validateStep1()) return;
-    if (step === 1 && !validateStep2()) return;
-    if (step < 2) { setErrors({}); setStep(step + 1); }
+    if (step === 0 && !validateStep1()) { setShowErrors(true); toast("Please fill in all mandatory fields", "error"); return; }
+    if (step === 1 && !validateStep2()) { setShowErrors(true); toast("Please fill in all mandatory fields", "error"); return; }
+    if (step < 2) { setErrors({}); setShowErrors(false); setStep(step + 1); }
   }
 
   function validateStep3(): boolean {
@@ -115,7 +153,8 @@ export function WizardShell() {
   }
 
   async function handleSave() {
-    if (!validateStep3()) return;
+    if (units.length === 0) { toast("Add at least one unit before saving", "error"); return; }
+    if (!validateStep3()) { setShowErrors(true); toast("Please fill in all mandatory fields", "error"); return; }
     setSaving(true);
     try {
       const firstBuilding = buildings[0];
@@ -202,13 +241,22 @@ export function WizardShell() {
       {/* Step content */}
       <div className={`bg-bg-0 border border-border rounded-lg ${step === 2 ? "p-4" : "p-6"}`}>
         {step === 0 && (
-          <Step1GeneralInfo data={step1} onChange={setStep1} errors={errors} onParsed={setPendingPrefill} onDocumentUploaded={(doc) => setUploadedDocs((prev) => [...prev, doc])} />
+          <Step1GeneralInfo
+            data={step1}
+            onChange={setStep1}
+            errors={errors}
+            showErrors={showErrors}
+            contacts={contacts}
+            onParsed={setPendingPrefill}
+            onDocumentUploaded={(doc) => setUploadedDocs((prev) => [...prev, doc])}
+          />
         )}
         {step === 1 && (
           <Step2Buildings
             buildings={buildings}
             onChange={setBuildings}
             errors={errors}
+            showErrors={showErrors}
           />
         )}
         {step === 2 && (
@@ -217,6 +265,7 @@ export function WizardShell() {
             units={units}
             onChange={setUnits}
             errors={errors}
+            showErrors={showErrors}
           />
         )}
       </div>
@@ -224,8 +273,12 @@ export function WizardShell() {
       <PrefillDialog
         open={pendingPrefill !== null}
         data={pendingPrefill ?? { buildings: [] }}
-        applying={false}
-        onApply={() => pendingPrefill && applyPrefill(pendingPrefill)}
+        applying={applying}
+        onApply={() => {
+          if (!pendingPrefill) return;
+          setApplying(true);
+          applyPrefill(pendingPrefill).finally(() => setApplying(false));
+        }}
         onCancel={() => setPendingPrefill(null)}
       />
 

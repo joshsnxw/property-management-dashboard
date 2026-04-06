@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { PropertyDetail, Staff } from "./types";
+import { PropertyDetail, Contact } from "./types";
 
 interface Props {
   property: PropertyDetail;
@@ -43,14 +43,14 @@ export function TabGeneral({ property, onUpdate }: Props) {
   const [saving, setSaving]           = useState(false);
   const [deleting, setDeleting]       = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [staff, setStaff]             = useState<Staff[]>([]);
+  const [contacts, setContacts]       = useState<Contact[]>([]);
 
   useEffect(() => {
-    fetch("/api/staff").then((r) => r.json()).then(setStaff).catch(() => {});
+    fetch("/api/contacts").then((r) => r.json()).then(setContacts).catch(() => {});
   }, []);
 
-  const managers    = staff.filter((s) => s.role === "MANAGER");
-  const accountants = staff.filter((s) => s.role === "ACCOUNTANT");
+  const managers    = contacts.filter((c) => c.role === "MANAGER");
+  const accountants = contacts.filter((c) => c.role === "ACCOUNTANT");
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(toDraft(property));
 

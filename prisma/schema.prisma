@@ -19,8 +19,8 @@ model Property {
 
   managerId    String
   accountantId String
-  manager      Staff      @relation("manager",    fields: [managerId],    references: [id])
-  accountant   Staff      @relation("accountant", fields: [accountantId], references: [id])
+  manager      Contact    @relation("manager",    fields: [managerId],    references: [id])
+  accountant   Contact    @relation("accountant", fields: [accountantId], references: [id])
 
   buildings  Building[]
   documents  Document[]
@@ -54,12 +54,16 @@ model Unit {
   building         Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
 }
 
-model Staff {
-  id        String     @id @default(cuid())
-  name      String
-  role      StaffRole
-  managed   Property[] @relation("manager")
-  accounted Property[] @relation("accountant")
+model Contact {
+  id          String      @id @default(cuid())
+  name        String
+  role        ContactRole
+  street      String?
+  houseNumber String?
+  postalCode  String?
+  city        String?
+  managed     Property[]  @relation("manager")
+  accounted   Property[]  @relation("accountant")
 }
 
 model Document {
@@ -90,7 +94,7 @@ enum UnitType {
   PARKING
 }
 
-enum StaffRole {
+enum ContactRole {
   MANAGER
   ACCOUNTANT
 }

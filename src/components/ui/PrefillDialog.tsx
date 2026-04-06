@@ -11,10 +11,20 @@ interface ExtractedBuilding {
 }
 
 export interface ExtractedProperty {
-  name?:      string;
-  address?:   string;
-  type?:      string;
-  buildings:  ExtractedBuilding[];
+  name?:              string;
+  address?:           string;
+  type?:              string;
+  managerName?:       string;
+  managerStreet?:     string;
+  managerHouseNumber?:string;
+  managerPostalCode?: string;
+  managerCity?:       string;
+  accountantName?:       string;
+  accountantStreet?:     string;
+  accountantHouseNumber?:string;
+  accountantPostalCode?: string;
+  accountantCity?:       string;
+  buildings:          ExtractedBuilding[];
 }
 
 interface Props {
@@ -50,6 +60,18 @@ export function PrefillDialog({ open, data, onApply, onCancel, applying }: Props
             <div className="flex justify-between gap-4">
               <span className="text-tertiary shrink-0">Address</span>
               <span className="text-primary text-right">{data.address}</span>
+            </div>
+          )}
+          {data.managerName && (
+            <div className="flex justify-between gap-4">
+              <span className="text-tertiary shrink-0">Manager</span>
+              <span className="text-primary text-right">{data.managerName}</span>
+            </div>
+          )}
+          {data.accountantName && (
+            <div className="flex justify-between gap-4">
+              <span className="text-tertiary shrink-0">Accountant</span>
+              <span className="text-primary text-right">{data.accountantName}</span>
             </div>
           )}
           <div className="flex justify-between">

@@ -13,8 +13,8 @@ export interface Step1Data {
   accountantId: string;
 }
 
-interface StaffMember {
-  id: string;
+export interface Contact {
+  id:   string;
   name: string;
   role: "MANAGER" | "ACCOUNTANT";
 }
@@ -29,15 +29,16 @@ interface Props {
   data: Step1Data;
   onChange: (data: Step1Data) => void;
   errors: Record<string, string>;
+  showErrors?: boolean;
+  contacts: Contact[];
   onParsed?: (data: ExtractedProperty) => void;
   onDocumentUploaded?: (doc: UploadedDoc) => void;
 }
 
-export function Step1GeneralInfo({ data, onChange, errors, onParsed, onDocumentUploaded }: Props) {
+export function Step1GeneralInfo({ data, onChange, errors, showErrors, contacts, onParsed, onDocumentUploaded }: Props) {
   const { toast } = useToast();
-  const fileInputRef             = useRef<HTMLInputElement>(null);
-  const [staff, setStaff]            = useState<StaffMember[]>([]);
-  const [uploading, setUploading]    = useState(false);
+  const fileInputRef                = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading]   = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -95,24 +96,17 @@ export function Step1GeneralInfo({ data, onChange, errors, onParsed, onDocumentU
     }
   }
 
-  useEffect(() => {
-    fetch("/api/staff")
-      .then((r) => r.json())
-      .then(setStaff)
-      .catch(() => {});
-  }, []);
-
-  const managers    = staff.filter((s) => s.role === "MANAGER");
-  const accountants = staff.filter((s) => s.role === "ACCOUNTANT");
+  const managers    = contacts.filter((c) => c.role === "MANAGER");
+  const accountants = contacts.filter((c) => c.role === "ACCOUNTANT");
 
   function set(patch: Partial<Step1Data>) {
     onChange({ ...data, ...patch });
   }
 
-  const inputClass =
-    "w-full px-3 py-2 text-sm rounded-md border border-border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent transition-colors";
-  const selectClass = inputClass;
-  const labelClass  = "block text-xs font-medium text-secondary mb-1";
+  const base       = "w-full px-3 py-2 text-sm rounded-md border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none transition-colors";
+  const inputClass = (empty: boolean) => `${base} ${showErrors && empty ? "border-red focus:border-red" : "border-border focus:border-accent"}`;
+  const labelClass = "block text-xs font-medium text-secondary mb-1";
+  const req        = <span className="text-red ml-0.5">*</span>;
 
   return (
     <div className="flex flex-col gap-5">
@@ -155,8 +149,8 @@ export function Step1GeneralInfo({ data, onChange, errors, onParsed, onDocumentU
 
       {/* Type selector */}
       <div>
-        <p className={labelClass}>Property type</p>
-        <div className="flex gap-3">
+        <p className={labelClass}>Property type{req}</p>
+        <div className={`flex gap-3 rounded-md ${showErrors && !data.type ? "outline outline-1 outline-red" : ""}`}>
           {(["WEG", "MV"] as const).map((t) => (
             <button
               key={t}
@@ -172,26 +166,26 @@ export function Step1GeneralInfo({ data, onChange, errors, onParsed, onDocumentU
             </button>
           ))}
         </div>
-        {errors.type && <p className="mt-1 text-xs text-red">{errors.type}</p>}
       </div>
 
       {/* Name */}
       <div>
-        <label className={labelClass}>Property name</label>
+        <label className={labelClass}>Property name{req}</label>
         <input
-          className={inputClass}
+          autoComplete="off"
+          className={inputClass(!data.name.trim())}
           placeholder="e.g. Wohnanlage Prenzlauer Berg"
           value={data.name}
           onChange={(e) => set({ name: e.target.value })}
         />
-        {errors.name && <p className="mt-1 text-xs text-red">{errors.name}</p>}
       </div>
 
       {/* Number */}
       <div>
         <label className={labelClass}>Internal number</label>
         <input
-          className={inputClass}
+          autoComplete="off"
+          className={inputClass(false)}
           placeholder={`Auto: ${data.type ?? "WEG"}-XXX`}
           value={data.number}
           onChange={(e) => set({ number: e.target.value })}
@@ -201,9 +195,9 @@ export function Step1GeneralInfo({ data, onChange, errors, onParsed, onDocumentU
       {/* Manager + Accountant */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>Manager</label>
+          <label className={labelClass}>Manager{req}</label>
           <select
-            className={selectClass}
+            className={inputClass(!data.managerId)}
             value={data.managerId}
             onChange={(e) => set({ managerId: e.target.value })}
           >
@@ -212,12 +206,11 @@ export function Step1GeneralInfo({ data, onChange, errors, onParsed, onDocumentU
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </select>
-          {errors.managerId && <p className="mt-1 text-xs text-red">{errors.managerId}</p>}
         </div>
         <div>
-          <label className={labelClass}>Accountant</label>
+          <label className={labelClass}>Accountant{req}</label>
           <select
-            className={selectClass}
+            className={inputClass(!data.accountantId)}
             value={data.accountantId}
             onChange={(e) => set({ accountantId: e.target.value })}
           >
@@ -226,9 +219,6 @@ export function Step1GeneralInfo({ data, onChange, errors, onParsed, onDocumentU
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
-          {errors.accountantId && (
-            <p className="mt-1 text-xs text-red">{errors.accountantId}</p>
-          )}
         </div>
       </div>
 

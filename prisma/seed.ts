@@ -8,23 +8,23 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // Staff
-  const alice = await prisma.staff.upsert({
+  // Contacts
+  const alice = await prisma.contact.upsert({
     where: { id: "staff-alice" },
     update: {},
     create: { id: "staff-alice", name: "Alice Müller", role: "MANAGER" },
   });
-  const bob = await prisma.staff.upsert({
+  const bob = await prisma.contact.upsert({
     where: { id: "staff-bob" },
     update: {},
     create: { id: "staff-bob", name: "Bob Schmidt", role: "MANAGER" },
   });
-  const clara = await prisma.staff.upsert({
+  const clara = await prisma.contact.upsert({
     where: { id: "staff-clara" },
     update: {},
     create: { id: "staff-clara", name: "Clara Weber", role: "ACCOUNTANT" },
   });
-  const dieter = await prisma.staff.upsert({
+  const dieter = await prisma.contact.upsert({
     where: { id: "staff-dieter" },
     update: {},
     create: { id: "staff-dieter", name: "Dieter Bauer", role: "ACCOUNTANT" },
@@ -199,7 +199,7 @@ async function main() {
     },
   });
 
-  console.log("Seed complete: 4 properties, 2 managers, 2 accountants.");
+  console.log("Seed complete: 4 properties, 2 manager contacts, 2 accountant contacts.");
 }
 
 main()

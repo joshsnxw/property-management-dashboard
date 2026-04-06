@@ -24,10 +24,14 @@ export interface Building {
   units:       Unit[];
 }
 
-export interface Staff {
-  id:   string;
-  name: string;
-  role: "MANAGER" | "ACCOUNTANT";
+export interface Contact {
+  id:           string;
+  name:         string;
+  role:         "MANAGER" | "ACCOUNTANT";
+  street?:      string | null;
+  houseNumber?: string | null;
+  postalCode?:  string | null;
+  city?:        string | null;
 }
 
 export interface Document {
@@ -47,8 +51,8 @@ export interface PropertyDetail {
   status:      "ACTIVE" | "PENDING" | "ARCHIVED";
   managerId:   string;
   accountantId:string;
-  manager:     Staff | null;
-  accountant:  Staff | null;
+  manager:     Contact | null;
+  accountant:  Contact | null;
   buildings:   Building[];
   documents:   Document[];
   createdAt:   string;

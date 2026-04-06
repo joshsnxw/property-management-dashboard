@@ -10,6 +10,16 @@ const PROPERTY_SCHEMA = {
     address: { type: "string",  description: "Full street address of the property" },
     number:  { type: "string",  description: "Internal property reference number" },
     type:    { type: "string",  enum: ["WEG", "MV"] },
+    managerName:        { type: "string", description: "Name of the Verwalter (property manager company or person) as written in the document" },
+    managerStreet:      { type: "string" },
+    managerHouseNumber: { type: "string" },
+    managerPostalCode:  { type: "string" },
+    managerCity:        { type: "string" },
+    accountantName:        { type: "string", description: "Name of the Buchhalter/accountant company or person as written in the document" },
+    accountantStreet:      { type: "string" },
+    accountantHouseNumber: { type: "string" },
+    accountantPostalCode:  { type: "string" },
+    accountantCity:        { type: "string" },
     buildings: {
       type: "array",
       minItems: 1,
@@ -73,7 +83,9 @@ export async function POST(request: Request) {
         "Extract all structured property data from this declaration of division (Teilungserklärung). " +
         "Use null for missing fields. " +
         "Preserve Miteigentumsanteil as fractions, e.g. '153/10000'. " +
-        "Normalise floor (Geschoss) to: 'UG' (Untergeschoss), 'EG' (Erdgeschoss), or integer string ('1', '2', '3') for upper floors.",
+        "Normalise floor (Geschoss) to: 'UG' (Untergeschoss), 'EG' (Erdgeschoss), or integer string ('1', '2', '3') for upper floors. " +
+        "Extract the manager (Verwalter) name and address as managerName, managerStreet, managerHouseNumber, managerPostalCode, managerCity if present. " +
+        "Extract the accountant (Buchhalter) name and address as accountantName, accountantStreet, accountantHouseNumber, accountantPostalCode, accountantCity if present.",
     });
 
     if (!ocr.documentAnnotation) {
