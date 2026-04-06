@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { BuildingData } from "./Step2Buildings";
 
@@ -22,15 +22,16 @@ interface Props {
   buildings: BuildingData[];
   units:     UnitRow[];
   onChange:  (units: UnitRow[]) => void;
-  errors?:   Record<string, string>;
+  errors?:    Record<string, string>;
+  showErrors?: boolean;
 }
 
 function emptyUnit(buildingIndex = 0): UnitRow {
   return { number: "", type: "APARTMENT", floor: "", entrance: "", sizeSqm: "", coOwnershipShare: "", yearBuilt: "", rooms: "", buildingIndex };
 }
 
-export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
-  const [typeFilter, setTypeFilter] = [null as string | null, (_: string | null) => {}];
+export function Step3Units({ buildings, units, onChange, errors = {}, showErrors }: Props) {
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
   // eslint-disable-next-line prefer-const
   let activeType: string | null = null;
   const [_activeType, setActiveType] = [activeType, (v: string | null) => { activeType = v; }];
@@ -48,16 +49,6 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
 
   function removeUnit(i: number) {
     onChange(units.filter((_, idx) => idx !== i));
-  }
-
-  function bulkFillDown() {
-    if (units.length < 2) return;
-    const first = units[0];
-    onChange(
-      units.map((u, i) =>
-        i === 0 ? u : { ...u, buildingIndex: first.buildingIndex, entrance: first.entrance }
-      )
-    );
   }
 
   // Tab key moves to next cell in the same row, then wraps to next row
@@ -88,14 +79,9 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-primary">Units</h2>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={bulkFillDown}>
-            Bulk fill ↓
-          </Button>
-          <Button variant="ghost" size="sm" disabled title="Coming soon">
-            Import CSV
-          </Button>
-        </div>
+        <Button variant="ghost" size="sm" disabled title="Coming soon">
+          Import CSV
+        </Button>
       </div>
 
       {/* Type filter pills */}
@@ -168,14 +154,11 @@ export function Step3Units({ buildings, units, onChange, errors = {} }: Props) {
                   <td className="px-1 py-0.5">
                     <input
                       data-row={i} data-col={1}
-                      className={`${tdInput} ${errors[`u${i}_number`] ? "ring-1 ring-red rounded" : ""}`}
+                      className={`${tdInput} ${showErrors && !u.number.trim() ? "ring-1 ring-red rounded" : ""}`}
                       value={u.number}
                       onChange={(e) => update(i, { number: e.target.value })}
                       onKeyDown={(e) => handleKeyDown(e, i, 1, 9)}
                     />
-                    {errors[`u${i}_number`] && (
-                      <p className="text-xs text-red mt-0.5 px-2">{errors[`u${i}_number`]}</p>
-                    )}
                   </td>
                   {/* Type */}
                   <td className="px-1 py-0.5">

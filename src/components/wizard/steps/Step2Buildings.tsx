@@ -13,16 +13,17 @@ export interface BuildingData {
 }
 
 interface Props {
-  buildings: BuildingData[];
-  onChange:  (buildings: BuildingData[]) => void;
-  errors:    Record<string, string>;
+  buildings:  BuildingData[];
+  onChange:   (buildings: BuildingData[]) => void;
+  errors:     Record<string, string>;
+  showErrors?: boolean;
 }
 
 const emptyBuilding: BuildingData = {
   label: "", street: "", houseNumber: "", postalCode: "", city: "Berlin",
 };
 
-export function Step2Buildings({ buildings, onChange, errors }: Props) {
+export function Step2Buildings({ buildings, onChange, errors, showErrors }: Props) {
   function update(i: number, patch: Partial<BuildingData>) {
     const next = buildings.map((b, idx) => (idx === i ? { ...b, ...patch } : b));
     onChange(next);
@@ -37,8 +38,13 @@ export function Step2Buildings({ buildings, onChange, errors }: Props) {
     onChange(buildings.filter((_, idx) => idx !== i));
   }
 
-  const inputClass =
-    "w-full px-3 py-1.5 text-sm rounded-md border border-border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent transition-colors";
+  const base = "w-full px-3 py-1.5 text-sm rounded-md border bg-bg-0 text-primary placeholder:text-tertiary focus:outline-none transition-colors";
+  const ok   = "border-border focus:border-accent";
+  const bad  = "border-red focus:border-red";
+
+  function ic(value: string) { return `${base} ${showErrors && !value.trim() ? bad : ok}`; }
+
+  const req = <span className="text-red ml-0.5">*</span>;
 
   return (
     <div className="flex flex-col gap-4">
@@ -63,65 +69,53 @@ export function Step2Buildings({ buildings, onChange, errors }: Props) {
 
           {/* Label */}
           <div>
-            <label className="block text-xs font-medium text-secondary mb-1">Label</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Label{req}</label>
             <input
-              className={inputClass}
-              placeholder="e.g. Haus A"
+              autoComplete="off"
+              className={ic(b.label)}
               value={b.label}
               onChange={(e) => update(i, { label: e.target.value })}
             />
-            {errors[`b${i}_label`] && (
-              <p className="mt-0.5 text-xs text-red">{errors[`b${i}_label`]}</p>
-            )}
           </div>
 
           {/* Street + Number */}
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-secondary mb-1">Street</label>
+              <label className="block text-xs font-medium text-secondary mb-1">Street{req}</label>
               <input
-                className={inputClass}
-                placeholder="Kastanienallee"
+                autoComplete="off"
+                className={ic(b.street)}
                 value={b.street}
                 onChange={(e) => update(i, { street: e.target.value })}
               />
-              {errors[`b${i}_street`] && (
-                <p className="mt-0.5 text-xs text-red">{errors[`b${i}_street`]}</p>
-              )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-secondary mb-1">No.</label>
+              <label className="block text-xs font-medium text-secondary mb-1">No.{req}</label>
               <input
-                className={inputClass}
-                placeholder="12"
+                autoComplete="off"
+                className={ic(b.houseNumber)}
                 value={b.houseNumber}
                 onChange={(e) => update(i, { houseNumber: e.target.value })}
               />
-              {errors[`b${i}_houseNumber`] && (
-                <p className="mt-0.5 text-xs text-red">{errors[`b${i}_houseNumber`]}</p>
-              )}
             </div>
           </div>
 
           {/* Postal + City */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs font-medium text-secondary mb-1">Postal code</label>
+              <label className="block text-xs font-medium text-secondary mb-1">Postal code{req}</label>
               <input
-                className={inputClass}
-                placeholder="10435"
+                autoComplete="off"
+                className={ic(b.postalCode)}
                 value={b.postalCode}
                 onChange={(e) => update(i, { postalCode: e.target.value })}
               />
-              {errors[`b${i}_postalCode`] && (
-                <p className="mt-0.5 text-xs text-red">{errors[`b${i}_postalCode`]}</p>
-              )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-secondary mb-1">City</label>
+              <label className="block text-xs font-medium text-secondary mb-1">City{req}</label>
               <input
-                className={inputClass}
-                placeholder="Berlin"
+                autoComplete="off"
+                className={ic(b.city)}
                 value={b.city}
                 onChange={(e) => update(i, { city: e.target.value })}
               />
@@ -134,8 +128,8 @@ export function Step2Buildings({ buildings, onChange, errors }: Props) {
               <label className="block text-xs font-medium text-secondary mb-1">Year built</label>
               <input
                 type="number"
-                className={inputClass}
-                placeholder="1928"
+                autoComplete="off"
+                className={`${base} ${ok}`}
                 value={b.yearBuilt ?? ""}
                 onChange={(e) =>
                   update(i, { yearBuilt: e.target.value ? parseInt(e.target.value) : undefined })
@@ -146,8 +140,8 @@ export function Step2Buildings({ buildings, onChange, errors }: Props) {
               <label className="block text-xs font-medium text-secondary mb-1">Floors</label>
               <input
                 type="number"
-                className={inputClass}
-                placeholder="5"
+                autoComplete="off"
+                className={`${base} ${ok}`}
                 value={b.floors ?? ""}
                 onChange={(e) =>
                   update(i, { floors: e.target.value ? parseInt(e.target.value) : undefined })
