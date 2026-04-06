@@ -20,9 +20,9 @@ export function TabUnits({ propertyId, buildings, onUpdate }: Props) {
   const [typeFilter, setTypeFilter]   = useState<UnitType | "ALL">("ALL");
   const [confirmDelete, setConfirmDelete] = useState<Unit | null>(null);
 
-  const allUnits = buildings.flatMap((b) =>
-    b.units.map((u) => ({ ...u, buildingLabel: b.label }))
-  );
+  const allUnits = buildings
+    .flatMap((b) => b.units.map((u) => ({ ...u, buildingLabel: b.label })))
+    .sort((a, b) => a.id.localeCompare(b.id));
 
   const filtered = typeFilter === "ALL"
     ? allUnits
