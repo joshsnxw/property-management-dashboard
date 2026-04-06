@@ -151,8 +151,8 @@ export function Step3Units({ buildings, units, onChange, errors = {}, showErrors
             <col className="w-24" />
             <col className="w-16" />
             <col className="w-14" />
-            <col className="w-14" />  {/* duplicate */}
-            <col className="w-8" />   {/* delete */}
+            <col className="w-14" />
+            <col className="w-8" />
           </colgroup>
           <thead>
             <tr className="bg-bg-1 border-b border-border">
