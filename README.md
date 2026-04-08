@@ -2,6 +2,9 @@
 
 Property management dashboard for German residential portfolios. Manages WEG (Wohnungseigentümergemeinschaft) and MV (Mietverwaltung) properties with their buildings, units, contacts, and documents.
 
+## Video Demo
+[Watch on Loom](https://www.loom.com/share/13c6f097cb43416ea351174378703200)
+
 ## Features
 
 - **Properties** — create and manage WEG/MV properties with status tracking (active, pending, archived)
