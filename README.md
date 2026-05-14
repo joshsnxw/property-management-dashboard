@@ -1,4 +1,4 @@
-# Buena
+# beam
 
 Property management dashboard for German residential portfolios. Manages WEG (Wohnungseigentümergemeinschaft) and MV (Mietverwaltung) properties with their buildings, units, contacts, and documents.
 

@@ -60,7 +60,7 @@ export function Sidebar() {
           </button>
         ) : (
           <>
-            <span className="text-base font-semibold text-primary tracking-tight">Buena</span>
+            <span className="text-base font-semibold text-primary tracking-tight">beam</span>
             <button
               type="button"
               onClick={toggle}
